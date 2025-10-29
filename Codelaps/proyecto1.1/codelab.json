@@ -1,0 +1,25 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2025-10-29T19:34:44+01:00",
+  "id": "123",
+  "duration": 0,
+  "title": "Bastionar la BIOS/UEFI",
+  "summary": "Proyecto BIOS/UEFI",
+  "source": "proyecto1-1.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "codelab",
+    "markdown"
+  ],
+  "tags": [
+    "web"
+  ],
+  "feedback": "https://example.com",
+  "url": "123"
+}

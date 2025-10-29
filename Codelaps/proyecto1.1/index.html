@@ -1,0 +1,72 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Bastionar la BIOS/UEFI</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="123"
+                  title="Bastionar la BIOS/UEFI"
+                  environment="web"
+                  feedback-link="https://example.com">
+    
+      <google-codelab-step label="MENÚ SECURITY (Seguridad)" duration="0">
+        <p>Esta contraseña protege TODO el acceso a la BIOS y debe establecerse PRIMERO antes que cualquier otra contraseña.</p>
+<p class="image-container"><img alt="!\\[\\]\\[image2\\]" src="img\\bc4c1b8e47e16548.png"></p>
+<p>Habilitamos HDD Password, que protege el disco duro incluso si se extrae del equipo.</p>
+<p><img alt="!\\[\\]\\[image3\\] " src="img\\bb30584462e5657a.png"> Habilitamos la configuración de &#34;<strong>Security Chip</strong>&#34; el cual es requerido para el cifrado BitLocker y arranque seguro, también habilitaremos la opción &#34;<strong>Secure Boot</strong>&#34; para evitar arranque de sistemas no firmados o manipulados, el resto lo dejamos tal cual.<br><img alt="!\\[\\]\\[image4\\]" src="img\\bcf83942b1810f20.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="MENÚ BOOT (Arranque)" duration="0">
+        <p>Configuramos &#34;<strong>Boot Mode</strong>&#34; como UEFI dado a este tiene mayor seguridad que Legacy (evita malware tipo bootkit), Deshabilitamos la configuración de &#34;<strong>USB Boot</strong>&#34; para evitar arranque desde dispositivos externos, Deshabilitamos también la opción &#34;<strong>PXE Boot to LAN</strong>&#34; para reducir el riesgo de arranque remoto no autorizado, por último nos quedaría controlar el orden de arranque para evitar el bypass que sería el <strong>Boot Order (En este caso primero Windows Boot Manager)<br></strong><img alt="!\\[\\]\\[image5\\]" src="img\\3b56c573fdd356eb.png"></p>
+<p class="image-container"><img alt="!\\[\\]\\[image6\\]" src="img\\532b5b2d61eb09f2.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="MENÚ CONFIGURATION (Configuración)" duration="0">
+        <p>Desactivamos la opción &#34;<strong>MAC Address Pass Through</strong>&#34; para evitar spoofing o rastreo de dirección MAC, a su vez también deshabilitamos &#34;<strong>Wake On LAN from Dock</strong>&#34; para evitar un encendido remoto no autorizado, dejamos activada la opción &#34;<strong>Wireless LAN</strong>&#34; si la empresa donde está dispone de WiFi, si pudiera ir por cable o no disponen de una red WiFi, esta opción se la cambiamos, por último de esta captura depende de si trabajamos con virtualización, si no se usa se deshabilita.</p>
+<p class="image-container"><img alt="!\\[\\]\\[image7\\]" src="img\\ecbfda65c4fe9317.png"></p>
+<p>Empezamos con la 2ª parte del menú de configuración:</p>
+<ul>
+<li>Deshabilitamos &#34;<strong>BIOS Back Flash</strong>&#34; para impedir revertir la BIOS a versiones vulnerables.</li>
+<li>Deshabilitamos &#34;<strong>Fool Proof Fn Ctrl</strong>&#34; para evitar confusión en combinaciones</li>
+<li>Deshabilitamos &#34;<strong>Always On USB</strong>&#34; esto evita la actividad/carga de puertos cuando el sistema está apagado</li>
+<li>El &#34;<strong>Hotkey Mode</strong>&#34; no afecta a la seguridad.</li>
+</ul>
+<p class="image-container"><img alt="!\\[\\]\\[image8\\]" src="img\\895d130228512eb1.png"></p>
+<p>Por último deshabilitamos &#34;<strong>One Key Battery</strong>&#34; para evitar activaciones no intencionadas, para guardar los cambios y salir F10.</p>
+<p class="image-container"><img alt="!\\[\\]\\[image9\\]" src="img\\750bcca687411bc6.png"></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
