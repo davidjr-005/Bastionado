@@ -1,0 +1,32 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2025-10-30T22:01:02+01:00",
+  "id": "bastionado-arranque-ubuntu-server",
+  "duration": 0,
+  "title": "Bastionado de Arranque - Ubuntu Server 24.04.01",
+  "authors": "David JR",
+  "summary": "Bastionado de Arranque en Ubuntu Server 24.04.01",
+  "source": "markdown.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "ciberseguridad",
+    "linux",
+    "hardening"
+  ],
+  "tags": [
+    "cifrado",
+    "grub",
+    "luks",
+    "lvm",
+    "seguridad",
+    "ubuntu"
+  ],
+  "feedback": "djimrui878@g.educaand.es",
+  "url": "bastionado-arranque-ubuntu-server"
+}

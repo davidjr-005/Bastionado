@@ -1,0 +1,418 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Bastionado de Arranque - Ubuntu Server 24.04.01</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="bastionado-arranque-ubuntu-server"
+                  title="Bastionado de Arranque - Ubuntu Server 24.04.01"
+                  environment="web"
+                  feedback-link="djimrui878@g.educaand.es">
+    
+      <google-codelab-step label="Introducción" duration="0">
+        <p>Este documento detalla el proceso de instalación y bastionado de arranque de Ubuntu Server 24.04.01 (Minimized) con cifrado completo de disco mediante LUKS y particionado seguro con LVM.</p>
+<p>El bastionado de arranque es fundamental en ciberseguridad para proteger la integridad del sistema desde el momento en que se enciende, previniendo accesos no autorizados y modificaciones maliciosas del bootloader.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Parte 1: Instalación de Ubuntu Server 24.04.01" duration="0">
+        <h2 is-upgraded>1.1. Desconexión del Adaptador de Red</h2>
+<p><strong>Objetivo:</strong> Realizar una instalación sin conexión a Internet para evitar actualizaciones durante el proceso y tener mayor control.</p>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>Antes de iniciar la máquina virtual, deshabilitamos el adaptador de red en la configuración de la VM.</li>
+</ul>
+<p class="image-container"><img alt="Desconexión del adaptador de red" src="img\\47525d59b165e81e.png"></p>
+<h2 is-upgraded>1.2. Selección de Idioma</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>Al arrancar desde la ISO, seleccionamos el idioma del instalador (Español o English según preferencia).</li>
+</ul>
+<p class="image-container"><img alt="Selección de idioma" src="img\\76dbbed86abe0c5b.png"></p>
+<h2 is-upgraded>1.3. Actualización del Instalador</h2>
+<p><strong>Objetivo:</strong> Evitar actualizaciones del instalador durante el proceso para mantener control total.</p>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>Cuando aparece el mensaje indicando que hay una actualización del instalador disponible, seleccionamos <strong>&#34;Continue without updating&#34;</strong> (Continuar sin actualizar).</li>
+</ul>
+<p class="image-container"><img alt="Continuar sin actualizar" src="img\\bf1b289451c88074.png"></p>
+<h2 is-upgraded>1.4. Configuración del Teclado</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>Configuramos la distribución del teclado según nuestro hardware (Spanish, English US, etc.).</li>
+<li>Podemos probar la configuración escribiendo caracteres especiales.</li>
+</ul>
+<p class="image-container"><img alt="Configuración del teclado" src="img\\28859e12b7dbbdc1.png"></p>
+<h2 is-upgraded>1.5. Tipo de Instalación</h2>
+<p><strong>Objetivo:</strong> Seleccionar la versión minimalizada para reducir la superficie de ataque.</p>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En &#34;Choose type of install&#34;, seleccionamos <strong>&#34;Ubuntu Server (minimized)&#34;</strong>.</li>
+<li>Esta versión incluye solo los paquetes esenciales, siguiendo el principio de seguridad de mínimo privilegio.</li>
+</ul>
+<p class="image-container"><img alt="Selección Ubuntu Server Minimized" src="img\\a8b9293bc7b510a9.png"></p>
+<p><strong>Ventajas de Minimized:</strong></p>
+<ul>
+<li>Superficie de ataque reducida</li>
+<li>Menos paquetes = menos vulnerabilidades potenciales</li>
+<li>Mayor control sobre lo instalado</li>
+<li>Práctica estándar en entornos de producción</li>
+</ul>
+<h2 is-upgraded>1.6. Configuración de Red</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En la sección de configuración de red, dejamos los ajustes por defecto (sin adaptador conectado).</li>
+<li>Continuamos sin realizar cambios.</li>
+</ul>
+<p class="image-container"><img alt="Configuración de red" src="img\\a6a2339a70eaa827.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Parte 2: Particionado Seguro con LVM Cifrado" duration="0">
+        <h2 is-upgraded>2.1. Selección de Particionado Personalizado</h2>
+<p><strong>Objetivo:</strong> Crear un esquema de particiones seguro con cifrado completo y separación de sistemas de archivos.</p>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En &#34;Storage configuration&#34;, seleccionamos <strong>&#34;Custom storage layout&#34;</strong> (Configuración personalizada).</li>
+</ul>
+<h2 is-upgraded>2.2. Creación de Partición /boot</h2>
+<p><strong>Objetivo:</strong> Crear una partición sin cifrar para que GRUB pueda cargar el kernel.</p>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Seleccionamos el disco disponible</li>
+<li>Click en &#34;Add GPT Partition&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Size:</strong> 700M</li>
+<li><strong>Format:</strong> ext4</li>
+<li><strong>Mount:</strong> /boot</li>
+<li><strong>NO marcar &#34;Encrypt&#34;</strong></li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Partición /boot" src="img\\acc5aff9f947bb7d.png"></p>
+<p><strong>Nota:</strong> /boot DEBE estar sin cifrar porque GRUB necesita leer el kernel antes de poder descifrar el resto del disco.</p>
+<h2 is-upgraded>2.3. Creación de Partición para LVM</h2>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Seleccionamos el espacio libre restante</li>
+<li>Click en &#34;Add GPT Partition&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Size:</strong> Usar todo el espacio restante (~24GB)</li>
+<li><strong>Format:</strong> Leave unformatted</li>
+<li><strong>NO asignar punto de montaje aún</strong></li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Partición sin formato" src="img\\9af2538f17a51dc4.png"></p>
+<h2 is-upgraded>2.4. Creación de Volume Group LVM Cifrado</h2>
+<p><strong>Objetivo:</strong> Cifrar el contenedor LVM con LUKS para proteger todos los datos en reposo.</p>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Seleccionamos la partición sin formato creada</li>
+<li>Click en <strong>&#34;Create Volume Group&#34;</strong></li>
+<li><strong>Marcamos &#34;Cifrado&#34;</strong> ✓</li>
+<li>Introducimos una passphrase segura (mínimo 12 caracteres)</li>
+<li><strong>Importante:</strong> Marcamos <strong>&#34;Create recovery key&#34;</strong> para tener un método de recuperación</li>
+<li>Anotamos la passphrase y la recovery key en un lugar seguro</li>
+</ol>
+<p class="image-container"><img alt="Volume Group cifrado" src="img\\72e1267c4daa409f.png"></p>
+<p><strong>Concepto de Seguridad:</strong></p>
+<ul>
+<li><strong>LUKS (Linux Unified Key Setup):</strong> Estándar de cifrado de disco en Linux</li>
+<li><strong>Passphrase:</strong> Se pedirá en cada arranque antes de montar las particiones</li>
+<li><strong>Recovery Key:</strong> Clave de respaldo en caso de olvidar la passphrase</li>
+</ul>
+<h2 is-upgraded>2.5. Creación de Volúmenes Lógicos</h2>
+<p><strong>Objetivo:</strong> Separar los sistemas de archivos para aplicar diferentes políticas de seguridad y prevenir ataques de denegación de servicio por llenado de disco.</p>
+<h3 is-upgraded>2.5.1. Volumen Lógico Root (/)</h3>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Dentro del Volume Group, click en &#34;Create Logical Volume&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Name:</strong> lv-root</li>
+<li><strong>Size:</strong> 12G</li>
+<li><strong>Format:</strong> ext4</li>
+<li><strong>Mount:</strong> /</li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Volumen lógico root" src="img\\30bf9e38f72d2746.png"></p>
+<h3 is-upgraded>2.5.2. Volumen Lógico Home (/home)</h3>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Click en &#34;Create Logical Volume&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Name:</strong> lv-home</li>
+<li><strong>Size:</strong> 5G</li>
+<li><strong>Format:</strong> ext4</li>
+<li><strong>Mount:</strong> /home</li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Volumen lógico home" src="img\\bc7b6cbc0e38e300.png"></p>
+<p><strong>Razón de seguridad:</strong> Aislar datos de usuarios del sistema operativo.</p>
+<h3 is-upgraded>2.5.3. Volumen Lógico Var (/var)</h3>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Click en &#34;Create Logical Volume&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Name:</strong> lv-var</li>
+<li><strong>Size:</strong> 4G</li>
+<li><strong>Format:</strong> ext4</li>
+<li><strong>Mount:</strong> /var</li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Volumen lógico var" src="img\\bba320fceec0557d.png"></p>
+<p><strong>Razón de seguridad:</strong> Contiene logs y datos variables. Si crece descontroladamente, no afecta al sistema raíz.</p>
+<h3 is-upgraded>2.5.4. Volumen Lógico Tmp (/tmp)</h3>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Click en &#34;Create Logical Volume&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Name:</strong> lv-tmp</li>
+<li><strong>Size:</strong> 1.5G</li>
+<li><strong>Format:</strong> ext4</li>
+<li><strong>Mount:</strong> /tmp</li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Volumen lógico tmp" src="img\\f76dc772a49981b5.png"></p>
+<p><strong>Razón de seguridad:</strong> Zona de alto riesgo donde cualquiera puede escribir. La montaremos con opciones restrictivas (noexec, nosuid, nodev).</p>
+<h3 is-upgraded>2.5.5. Volumen Lógico Swap</h3>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Click en &#34;Create Logical Volume&#34;</li>
+<li>Configuramos: <ul>
+<li><strong>Name:</strong> lv-swap</li>
+<li><strong>Size:</strong> 2G</li>
+<li><strong>Format:</strong> swap</li>
+<li><strong>Mount:</strong> (automático)</li>
+</ul>
+</li>
+</ol>
+<p class="image-container"><img alt="Volumen lógico swap" src="img\\1b0f2926b9999555.png"></p>
+<p><strong>Nota:</strong> El swap queda automáticamente dentro del cifrado, protegiendo datos que puedan volcarse a memoria de intercambio.</p>
+<h2 is-upgraded>2.6. Verificación del Esquema de Particiones</h2>
+<p>Antes de continuar, verificamos que el esquema sea:</p>
+<p class="image-container"><img alt="Esquema Particiones" src="img\\1097b5b541f69b90.png"></p>
+<p>Click en &#34;Done&#34; para continuar.</p>
+<p class="image-container"><img alt="Verificación" src="img\\5d219e1bcc535dcf.png"></p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Parte 3: Configuración del Sistema" duration="0">
+        <h2 is-upgraded>3.1. Identificación del Servidor</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>Introducimos el nombre del servidor (hostname)</li>
+<li>Creamos un usuario administrador con contraseña segura</li>
+<li>Este usuario tendrá permisos de sudo</li>
+</ul>
+<p class="image-container"><img alt="Configuración de usuario" src="img\\a1cb0a5f45d0325e.png"></p>
+<p><strong>Recomendaciones:</strong></p>
+<ul>
+<li>Usuario: nombre descriptivo (no &#34;admin&#34; o &#34;root&#34;)</li>
+<li>Contraseña: mínimo 16 caracteres, mayúsculas, minúsculas, números y símbolos</li>
+</ul>
+<h2 is-upgraded>3.2. Ubuntu Pro</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En la pantalla de &#34;Upgrade to Ubuntu Pro&#34;, seleccionamos <strong>&#34;Skip for now&#34;</strong></li>
+<li>Ubuntu Pro no es necesario para este laboratorio</li>
+</ul>
+<p class="image-container"><img alt="Skip Ubuntu Pro" src="img\\8ee0204db58586df.png"></p>
+<h2 is-upgraded>3.3. Servidor SSH</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En &#34;Install OpenSSH server&#34;, <strong>NO marcamos la casilla</strong> por ahora</li>
+<li>Lo instalaremos y configuraremos manualmente después con bastionado</li>
+</ul>
+<p class="image-container"><img alt="Skip SSH" src="img\\c8a195c9d66fb55f.png"></p>
+<p><strong>Razón de seguridad:</strong> Configuraremos SSH con opciones de bastionado específicas (cambio de puerto, autenticación por clave, fail2ban, etc.)</p>
+<h2 is-upgraded>3.4. Snaps</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>En &#34;Featured Server Snaps&#34;, <strong>no seleccionamos ninguno</strong></li>
+<li>Continuamos sin instalar snaps adicionales</li>
+</ul>
+<p class="image-container"><img alt="Skip snaps" src="img\\b71af723a57ec067.png"></p>
+<h2 is-upgraded>3.5. Instalación</h2>
+<p><strong>Pasos:</strong></p>
+<ul>
+<li>El instalador comienza a copiar archivos y configurar el sistema</li>
+<li>Este proceso tarda varios minutos</li>
+</ul>
+<p class="image-container"><img alt="Instalación en progreso" src="img\\6f0690b1726b8c00.png"></p>
+<h2 is-upgraded>3.6. Primer Arranque</h2>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Una vez completada la instalación, el sistema se reinicia</li>
+<li><strong>Aparece el prompt de LUKS pidiendo la passphrase</strong></li>
+<li>Introducimos la passphrase que configuramos para descifrar el disco</li>
+<li>El sistema continúa arrancando normalmente</li>
+</ol>
+<p><strong>Concepto:</strong> Este prompt aparecerá en CADA arranque. Sin la passphrase correcta, el sistema no puede descifrar las particiones y no arrancará.</p>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Parte 4: Bastionado del Arranque" duration="0">
+        <h2 is-upgraded>4.1. Instalación de Herramientas Necesarias</h2>
+<p>Como usamos Ubuntu Server Minimized, necesitamos instalar algunas herramientas básicas:</p>
+<pre><code language="language-bash" class="language-bash">sudo apt update
+sudo apt install nano vim -y
+</code></pre>
+<h2 is-upgraded>4.2. Protección de GRUB con Contraseña</h2>
+<p><strong>Objetivo:</strong> Prevenir que un atacante con acceso físico pueda modificar parámetros de arranque o acceder a modo single user.</p>
+<h3 is-upgraded>4.2.1. Generar Hash de Contraseña</h3>
+<p><strong>Comando:</strong></p>
+<pre><code language="language-bash" class="language-bash">sudo grub-mkpasswd-pbkdf2
+</code></pre>
+<p><strong>Pasos:</strong></p>
+<ol type="1">
+<li>Introduce una contraseña segura (puede ser diferente a la de LUKS)</li>
+<li>Confírmala</li>
+<li>El sistema generará un hash largo que comienza con <code>grub.pbkdf2.sha512...</code></li>
+<li><strong>Copia todo el hash completo</strong></li>
+</ol>
+<p class="image-container"><img alt="Hash de contraseña GRUB" src="img\\89df18072d107d17.png"></p>
+<h3 is-upgraded>4.2.2. Configurar GRUB</h3>
+<p><strong>Comando:</strong></p>
+<pre><code language="language-bash" class="language-bash">sudo nano /etc/grub.d/40_custom
+</code></pre>
+<p><strong>Contenido a añadir al final del archivo:</strong></p>
+<pre><code language="language-bash" class="language-bash">set superusers=&#34;grubadmin&#34;
+password_pbkdf2 grubadmin grub.pbkdf2.sha512.10000.AQUÍ_PEGA_TU_HASH_COMPLETO
+</code></pre>
+<p class="image-container"><img alt="Archivo 40_custom" src="img\\a57499e61d8449d3.png"></p>
+<p><strong>Explicación:</strong></p>
+<ul>
+<li><code>superusers</code>: Define el usuario administrador de GRUB</li>
+<li><code>password_pbkdf2</code>: Establece la contraseña cifrada con PBKDF2 (resistente a fuerza bruta)</li>
+</ul>
+<h3 is-upgraded>4.2.3. Actualizar GRUB y Aplicar Permisos</h3>
+<p><strong>Comandos:</strong></p>
+<pre><code language="language-bash" class="language-bash"># Actualizar configuración de GRUB
+sudo update-grub
+
+# Proteger archivo de configuración
+sudo chmod 600 /boot/grub/grub.cfg
+sudo chown root:root /boot/grub/grub.cfg
+</code></pre>
+<p class="image-container"><img alt="Actualización de GRUB" src="img\\6c17e74635c968a1.png"></p>
+<p><strong>Concepto de Seguridad:</strong></p>
+<ul>
+<li><code>chmod 600</code>: Solo root puede leer/escribir el archivo</li>
+<li>Previene que usuarios no privilegiados vean la configuración de GRUB</li>
+</ul>
+<h2 is-upgraded>4.3. Protección de Archivos de Boot</h2>
+<p><strong>Objetivo:</strong> Restringir permisos de kernels e initramfs para prevenir lectura no autorizada.</p>
+<p><strong>Comandos:</strong></p>
+<pre><code language="language-bash" class="language-bash"># Proteger todos los archivos críticos en /boot
+sudo chmod 600 /boot/vmlinuz-*
+sudo chmod 600 /boot/initrd.img-*
+sudo chmod 600 /boot/System.map-*
+sudo chmod 600 /boot/config-*
+
+# Verificar permisos
+ls -la /boot/
+</code></pre>
+<p class="image-container"><img alt="Permisos de /boot" src="img\\4c54f25faa6c516c.png"></p>
+<p><strong>Razón de seguridad:</strong> Estos archivos pueden contener información sensible sobre la configuración del kernel.</p>
+<h2 is-upgraded>4.4. Configuración de Opciones de Montaje Seguras</h2>
+<p><strong>Objetivo:</strong> Aplicar opciones de montaje restrictivas para prevenir ejecución de código malicioso y escalada de privilegios.</p>
+<h3 is-upgraded>4.4.1. Backup y Edición de /etc/fstab</h3>
+<p><strong>Comandos:</strong></p>
+<pre><code language="language-bash" class="language-bash"># Crear backup de seguridad
+sudo cp /etc/fstab /etc/fstab.backup
+
+# Editar fstab
+sudo nano /etc/fstab
+</code></pre>
+<h3 is-upgraded>4.4.2. Modificar Opciones de Montaje</h3>
+<p><strong>Configuración recomendada:</strong></p>
+<pre><code language="language-bash" class="language-bash"># / (raíz) - Sin cambios
+/dev/mapper/vg0-lv--root  /      ext4  defaults                        0  1
+
+# /boot - Solo lectura (lo haremos al final)
+UUID=xxx                  /boot  ext4  defaults                        0  2
+
+# /home - Prevenir dispositivos y SUID
+/dev/mapper/vg0-lv--home  /home  ext4  defaults,nodev,nosuid           0  2
+
+# /var - Prevenir dispositivos y SUID
+/dev/mapper/vg0-lv--var   /var   ext4  defaults,nodev,nosuid           0  2
+
+# /tmp - Máxima restricción (crítico)
+/dev/mapper/vg0-lv--tmp   /tmp   ext4  defaults,nodev,nosuid,noexec    0  2
+
+# swap
+/dev/mapper/vg0-lv--swap  none   swap  sw                              0  0
+</code></pre>
+<p class="image-container"><img alt="Archivo /etc/fstab" src="img\\d5b5fac22b4154ac.png"></p>
+<p><strong>Explicación de las opciones:</strong></p>
+<ul>
+<li><code>nodev</code>: Previene la creación/uso de dispositivos de bloques o caracteres</li>
+<li><code>nosuid</code>: Ignora bits SUID/SGID, previniendo escalada de privilegios</li>
+<li><code>noexec</code>: Previene la ejecución de binarios (crítico en /tmp)</li>
+<li><code>ro</code> (read-only): Solo lectura (para /boot al finalizar)</li>
+</ul>
+<p><strong>Números finales (dump y fsck):</strong></p>
+<ul>
+<li>Primer número (dump): Siempre 0 (obsoleto)</li>
+<li>Segundo número (fsck): <ul>
+<li><code>1</code>: Solo para <code>/</code> (verificar primero)</li>
+<li><code>2</code>: Para resto de particiones (verificar después)</li>
+<li><code>0</code>: Para swap (no verificar)</li>
+</ul>
+</li>
+</ul>
+<h3 is-upgraded>4.4.3. Aplicar Cambios</h3>
+<p><strong>Comandos:</strong></p>
+<pre><code language="language-bash" class="language-bash"># Remontar particiones con nuevas opciones
+sudo mount -o remount /
+sudo mount -o remount /boot
+sudo mount -o remount /home
+sudo mount -o remount /var
+sudo mount -o remount /tmp
+
+# Verificar que se aplicaron correctamente
+mount | grep -E &#39;(home|var|tmp)&#39;
+</code></pre>
+<p class="image-container"><img alt="Verificación de montajes" src="img\\153bcbcbf63de349.png"></p>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
