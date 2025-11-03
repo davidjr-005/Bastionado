@@ -25,7 +25,7 @@
                   id="bastionado-arranque-ubuntu-server"
                   title="Bastionado de Arranque - Ubuntu Server 24.04.01"
                   environment="web"
-                  feedback-link="(https://davidjr-005.github.io/Bastionado/)">
+                  feedback-link="djimrui878@g.educaand.es">
     
       <google-codelab-step label="Introducción" duration="0">
         <p>Este documento detalla el proceso de instalación y bastionado de arranque de Ubuntu Server 24.04.01 (Minimized) con cifrado completo de disco mediante LUKS y particionado seguro con LVM.</p>
@@ -300,17 +300,34 @@ sudo apt install nano vim -y
 <p class="image-container"><img alt="Hash de contraseña GRUB" src="img\\89df18072d107d17.png"></p>
 <h3 is-upgraded>4.2.2. Configurar GRUB</h3>
 <p><strong>Comando:</strong></p>
-<pre><code language="language-bash" class="language-bash">sudo nano /etc/grub.d/40_custom
+<pre><code language="language-bash" class="language-bash">sudo cp /etc/grub.d/40_custom /etc/grub.d/40_custom.backup
+sudo nano /etc/grub.d/40_custom
 </code></pre>
 <p><strong>Contenido a añadir al final del archivo:</strong></p>
 <pre><code language="language-bash" class="language-bash">set superusers=&#34;grubadmin&#34;
 password_pbkdf2 grubadmin grub.pbkdf2.sha512.10000.AQUÍ_PEGA_TU_HASH_COMPLETO
 </code></pre>
+<p class="image-container"><img alt="Copia 40_custom" src="img\\a5df8f8170b4bae3.png"></p>
 <p class="image-container"><img alt="Archivo 40_custom" src="img\\a57499e61d8449d3.png"></p>
 <p><strong>Explicación:</strong></p>
 <ul>
+<li><code>Copias</code>: Primero realizamos una copia del archivo para prevenir posibles fallos de configuración y poder restaurar</li>
 <li><code>superusers</code>: Define el usuario administrador de GRUB</li>
 <li><code>password_pbkdf2</code>: Establece la contraseña cifrada con PBKDF2 (resistente a fuerza bruta)</li>
+</ul>
+<p><strong>Comando:</strong></p>
+<pre><code language="language-bash" class="language-bash">sudo cp /etc/default/grub /etc/default/grub.backup
+sudo nano /etc/default/grub
+</code></pre>
+<p><strong>Contenido a modificar del archivo:</strong></p>
+<pre><code language="language-bash" class="language-bash">cambiar la línea `GRUB_TIMEOUT=5` a `GRUB_TIMEOUT=0`
+</code></pre>
+<p class="image-container"><img alt="Copia grub" src="img\\6076f0a3b3b0e97d.png"></p>
+<p class="image-container"><img alt="Archivo grub" src="img\\616aa5a39fb6667e.png"></p>
+<p><strong>Explicación:</strong></p>
+<ul>
+<li><code>Copias</code>: Primero realizamos una copia del archivo para prevenir posibles fallos de configuración y poder restaurar</li>
+<li><code>GRUB_TIMEOUT</code>: Para ocultar el menú GRUB al arrancar</li>
 </ul>
 <h3 is-upgraded>4.2.3. Actualizar GRUB y Aplicar Permisos</h3>
 <p><strong>Comandos:</strong></p>

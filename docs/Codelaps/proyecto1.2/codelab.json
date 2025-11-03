@@ -3,7 +3,7 @@
   "format": "html",
   "prefix": "https://storage.googleapis.com",
   "mainga": "UA-49880327-14",
-  "updated": "2025-10-30T23:57:17+01:00",
+  "updated": "2025-11-03T19:22:06+01:00",
   "id": "bastionado-arranque-ubuntu-server",
   "duration": 0,
   "title": "Bastionado de Arranque - Ubuntu Server 24.04.01",
@@ -27,6 +27,6 @@
     "seguridad",
     "ubuntu"
   ],
-  "feedback": "(https://davidjr-005.github.io/Bastionado/)",
+  "feedback": "djimrui878@g.educaand.es",
   "url": "bastionado-arranque-ubuntu-server"
 }
