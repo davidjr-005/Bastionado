@@ -1,66 +1,116 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Proyectos - Bastionado</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .proyecto {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .proyecto h2 {
-            margin-top: 0;
-            color: #007bff;
-        }
-        .proyecto a {
-            display: inline-block;
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .proyecto a:hover {
-            background: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio - Bastionado</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      text-align: center;
+      margin-bottom: 40px;
+      color: #00c6ff;
+      text-shadow: 0 0 10px rgba(0, 198, 255, 0.4);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .proyecto {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 25px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .proyecto:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+
+    .proyecto h2 {
+      color: #00c6ff;
+      margin-top: 0;
+    }
+
+    .proyecto p {
+      color: #ccc;
+      line-height: 1.5;
+    }
+
+    .proyecto a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 25px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .proyecto a:hover {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      transform: scale(1.05);
+    }
+
+    footer {
+      margin-top: 60px;
+      font-size: 0.9em;
+      color: #aaa;
+      text-align: center;
+    }
+
+  </style>
 </head>
 <body>
-    <h1>Portfolio de Proyectos - Bastionado</h1>
-    
+  <h1>💻 Portfolio de Proyectos - Bastionado</h1>
+
+  <div class="grid">
     <div class="proyecto">
-        <h2>Proyecto 1.1 - BIOS/UEFI</h2>
-        <p>Elaboración de una guía para bastionar la BIOS/UEFI del ordenador que estás utilizando (simulado)</p>
-        <a href="Codelaps/proyecto1.1/">Ver Proyecto →</a>
+      <h2>🔐 Proyecto 1.1 - BIOS/UEFI</h2>
+      <p>Guía para bastionar la BIOS/UEFI del equipo actual (simulado). Incluye medidas de protección, contraseñas y configuración segura.</p>
+      <a href="Codelaps/proyecto1.1/">Ver Proyecto →</a>
     </div>
-    
+
     <div class="proyecto">
-        <h2>Proyecto 1.2 - Arranque Debian</h2>
-        <p>Elaborarción de una guía para bastionar el arranque de un sistema Debian actual a tu elección.</p>
-        <a href="Codelaps/proyecto1.2/">Ver Proyecto →</a>
+      <h2>🧰 Proyecto 1.2 - Arranque Debian</h2>
+      <p>Guía para bastionar el arranque de un sistema Debian moderno, mejorando su seguridad desde el bootloader hasta el kernel.</p>
+      <a href="Codelaps/proyecto1.2/">Ver Proyecto →</a>
     </div>
-    
-  <!--  <div class="proyecto">
-        <h2>Proyecto 3 - Seguridad Web</h2>
-        <p>Descripción de tu tercer proyecto.</p>
-        <a href="proyecto3/">Ver Proyecto →</a>
-    </div> -->
+
+    <!-- Ejemplo de proyecto futuro -->
+    <!--
+    <div class="proyecto">
+      <h2>🌐 Proyecto 3 - Seguridad Web</h2>
+      <p>Análisis y endurecimiento de configuraciones web para proteger aplicaciones frente a vulnerabilidades comunes.</p>
+      <a href="Codelaps/proyecto3/">Ver Proyecto →</a>
+    </div>
+    -->
+  </div>
+
+  <footer>© 2025 Bastionado | Seguridad y Bastionado de Sistemas</footer>
 </body>
 </html>
