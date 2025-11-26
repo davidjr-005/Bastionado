@@ -1,0 +1,32 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2025-11-26T17:58:38+01:00",
+  "id": "infraestructura-red-packetracert",
+  "duration": 0,
+  "title": "Guía Completa: Infraestructura de Red Multi-Sede",
+  "authors": "David JR",
+  "summary": "Infraestructura de red en dos sedes",
+  "source": "Guia-Red.md",
+  "theme": "",
+  "status": [
+    "published"
+  ],
+  "category": [
+    "ciberseguridad",
+    "linux",
+    "hardening"
+  ],
+  "tags": [
+    "cifrado",
+    "grub",
+    "luks",
+    "lvm",
+    "seguridad",
+    "ubuntu"
+  ],
+  "feedback": "djimrui878@g.educaand.es",
+  "url": "infraestructura-red-packetracert"
+}

@@ -1,0 +1,789 @@
+
+<!doctype html>
+
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#4F7DC9">
+  <meta charset="UTF-8">
+  <title>Guía Completa: Infraestructura de Red Multi-Sede</title>
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400|Roboto:400,300,400italic,500,700|Roboto+Mono">
+  <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://storage.googleapis.com/claat-public/codelab-elements.css">
+  <style>
+    .success {
+      color: #1e8e3e;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <google-codelab-analytics gaid="UA-49880327-14"></google-codelab-analytics>
+  <google-codelab codelab-gaid=""
+                  id="infraestructura-red-packetracert"
+                  title="Guía Completa: Infraestructura de Red Multi-Sede"
+                  environment="web"
+                  feedback-link="djimrui878@g.educaand.es">
+    
+      <google-codelab-step label="Tabla de Contenidos" duration="0">
+        <ol type="1">
+<li><a href="#topolog%C3%ADa-y-arquitectura" target="_blank">Topología y Arquitectura</a></li>
+<li><a href="#configuraci%C3%B3n-de-vlans-en-switches" target="_blank">Configuración de VLANs en Switches</a></li>
+<li><a href="#configuraci%C3%B3n-de-vlans-en-routers" target="_blank">Configuración de VLANs en Routers</a></li>
+<li><a href="#configuraci%C3%B3n-de-routers" target="_blank">Configuración de Routers</a></li>
+<li><a href="#enrutamiento-est%C3%A1tico" target="_blank">Enrutamiento Estático</a></li>
+</ol>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Topología y Arquitectura" duration="0">
+        <h2 is-upgraded>Estructura General</h2>
+<pre><code>SEDE 1 (172.20.0.0/16)
+├─ Router0-S1 (R0-S1) - gateway de VLANs
+├─ Router1-S1 (R1-S1) - conecta a Router INTERMEDIO
+├─ Switch0-S1 - conecta PCs a las VLANs
+└─ PCs (PC0-PC8) en diferentes VLANs
+
+ROUTER INTERMEDIO
+├─ Conecta Sede 1 con Sede 2
+└─ Realiza forwarding entre sedes
+
+SEDE 2 (172.20.2.0/16)
+├─ Router2-S2 (R2-S2) - conecta con Router INTERMEDIO
+├─ Router3-S2 (R3-S2) - gateway de VLANs
+├─ Switch0-S2 - conecta PCs a las VLANs
+└─ PCs (PC9-PC17) en diferentes VLANs
+</code></pre>
+<h2 is-upgraded>Conexiones Físicas</h2>
+<ul>
+<li><strong>R0-S1 ↔ R1-S1</strong>: FastEthernet0/0 a FastEthernet1/0 (192.168.1.0/30)</li>
+<li><strong>R1-S1 ↔ Router INTERMEDIO</strong>: FastEthernet0/0 a FastEthernet0/0 (172.20.0.0/30)</li>
+<li><strong>Router INTERMEDIO ↔ R2-S2</strong>: FastEthernet1/0 a FastEthernet0/0 (172.20.0.4/30)</li>
+<li><strong>R2-S2 ↔ R3-S2</strong>: FastEthernet1/0 a FastEthernet0/0 (192.168.1.0/30)</li>
+<li><strong>Switch0-S1 ↔ Router0-S1</strong>: interfaces de acceso a VLANs</li>
+<li><strong>Switch0-S2 ↔ Router3-S2</strong>: interfaces de acceso a VLANs</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Configuración de VLANs en Switches" duration="0">
+        <h2 is-upgraded>En Switch0-S1 (Sede 1)</h2>
+<h3 is-upgraded>Crear VLANs</h3>
+<pre><code>enable
+config t
+hostname Switch0-S1
+
+! Crear VLAN 10 - TIC
+vlan 10
+ name TIC
+
+! Crear VLAN 20 - Facturación
+vlan 20
+ name Facturación
+
+! Crear VLAN 30 - Compras
+vlan 30
+ name Compras
+
+! Crear VLAN 40 - RRHH
+vlan 40
+ name RRHH
+
+! Crear VLAN 50 - Delivery
+vlan 50
+ name Delivery
+
+! Crear VLAN 60 - Comunicacion_RRSS
+vlan 60
+ name Comunicacion_RRSS
+
+! Crear VLAN 70 - Mantenimiento
+vlan 70
+ name Mantenimiento
+
+! Crear VLAN 80 - Legal
+vlan 80
+ name Legal
+
+! Crear VLAN 90 - Consejo_Administracion
+vlan 90
+ name Consejo_Administracion
+
+exit
+
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk native vlan 1
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch1-S1
+interface FastEthernet1/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch4-S1
+interface FastEthernet1/4
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch2-S1
+interface FastEthernet1/2
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch3-S1
+interface FastEthernet1/3
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+end
+write memory
+</code></pre>
+<h3 is-upgraded>Verificar configuración VLAN</h3>
+<pre><code>show vlan brief
+show interfaces switchport
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="En Switch1-S1" duration="0">
+        <pre><code>enable
+config t
+hostname Switch1-S1
+
+vlan 10
+ name TIC
+vlan 20
+ name Facturacion
+
+exit
+
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 10
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet1/2
+ switchport mode access
+ switchport access vlan 20
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Switch2-S1</h2>
+<pre><code>enable
+config t
+hostname Switch2-S1
+
+vlan 30
+ name Compras
+vlan 40
+ name RRHH
+
+exit
+
+! TRUNK hacia Switch0-S1
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! ACCESS hacia PCs
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 30
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet1/2
+ switchport mode access
+ switchport access vlan 40
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="En Switch3-S1" duration="0">
+        <pre><code>enable
+config t
+hostname Switch3-S1
+
+vlan 50
+ name  Delivery
+vlan 60
+ name Comunicacion_RRSS
+
+exit
+
+! TRUNK hacia Switch0-S1
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! ACCESS hacia PCs
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 50
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet1/2
+ switchport mode access
+ switchport access vlan 60
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="En Switch4-S1" duration="0">
+        <pre><code>enable
+config t
+hostname Switch4-S1
+
+
+vlan 70
+ name Mantenimiento
+vlan 80
+ name Legal
+vlan 90
+ name Consejo_Administracion
+
+exit
+
+! TRUNK hacia Switch0-S1
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! ACCESS hacia PCs
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 70
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet2/1
+ switchport mode access
+ switchport access vlan 80
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet3/1
+ switchport mode access
+ switchport access vlan 90
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Switch0-S2 (Sede 2)</h2>
+<h3 is-upgraded>Crear VLANs</h3>
+<pre><code>enable
+config t
+hostname Switch0-S2
+
+! Crear VLAN 100
+vlan 100
+ name Operaciones
+
+! Crear VLAN 110
+vlan 110
+ name RRHH
+
+! Crear VLAN 120
+vlan 120
+ name Fianzas
+
+! Crear VLAN 130
+vlan 130
+ name Seguridad
+
+exit
+
+! Trunk hacia Router3-S2 (gateway)
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk native vlan 1
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch6-S2
+interface FastEthernet1/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! Trunk hacia Switch7-S2
+interface FastEthernet2/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="En Swicth6-S2" duration="0">
+        <pre><code>enable
+config t
+hostname Switch6-S2
+
+! Crear TODAS las VLANs
+vlan 100
+ name Operaciones
+vlan 110
+ name RRHH
+exit
+
+! TRUNK hacia SwitchNT (core)
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! ACCESS hacia PCs
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 100
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet2/1
+ switchport mode access
+ switchport access vlan 110
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="En Switch7-S2" duration="0">
+        <pre><code>enable
+config t
+hostname Switch7-S2
+
+vlan 120
+ name Fianzas
+vlan 130
+ name Fianzas
+exit
+
+! TRUNK hacia SwitchNT (core)
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+
+! ACCESS hacia PCs
+interface FastEthernet1/1
+ switchport mode access
+ switchport access vlan 120
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+interface FastEthernet2/1
+ switchport mode access
+ switchport access vlan 130
+
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+end
+write memory
+</code></pre>
+<h3 is-upgraded>Verificar configuración VLAN</h3>
+<pre><code>show vlan brief
+show interfaces switchport
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Configuración de VLANs en Routers" duration="0">
+        <h2 is-upgraded>En Router0-S1 (R0-S1) - Sede 1</h2>
+<h3 is-upgraded>Crear subinterfaces VLAN</h3>
+<pre><code>enable
+config t
+hostname Router0-S1
+
+! VLAN 10 - TIC
+interface FastEthernet1/0.10
+ encapsulation dot1Q 10
+ ip address 172.20.0.33 255.255.224.0
+
+! VLAN 20 - Facturación
+interface FastEthernet1/0.20
+ encapsulation dot1Q 20
+ ip address 172.20.0.65 255.255.224.0
+
+! VLAN 30 - Compras
+interface FastEthernet1/0.30
+ encapsulation dot1Q 30
+ ip address 172.20.0.97 255.255.255.224
+
+! VLAN 40 - RRHH
+interface FastEthernet1/0.40
+ encapsulation dot1Q 40
+ ip address 172.20.0.129 255.255.255.224
+
+! VLAN 50 - Delivery
+interface FastEthernet1/0.50
+ encapsulation dot1Q 50
+ ip address 172.20.0.161 255.255.255.224
+
+! VLAN 60 - Comunicacion__RRSS
+interface FastEthernet1/0.60
+ encapsulation dot1Q 60
+ ip address 172.20.0.193 255.255.255.224
+
+! VLAN 70 - Mantenimiento
+interface FastEthernet1/0.70
+ encapsulation dot1Q 70
+ ip address 172.20.0.225 255.255.255.240
+
+! VLAN 80 - Departamento Legal
+interface FastEthernet1/0.80
+ encapsulation dot1Q 80
+ ip address 172.20.0.241 255.255.255.240
+
+! VLAN 90 - Consejo_Administración
+interface FastEthernet1/0.90
+ encapsulation dot1Q 90
+ ip address 172.20.1.1 255.255.255.240
+
+! Interfaz Trunk
+interface FastEthernet1/1
+ no ip address
+ no shutdown
+
+! Interfaz hacia firewall perimetral
+interface FastEthernet0/1
+ ip address 192.168.1.2 255.255.255.252
+ no shutdown
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router3-S2 (R3-S2) - Sede 2</h2>
+<h3 is-upgraded>Crear subinterfaces VLAN</h3>
+<pre><code>enable
+config t
+hostname Router3-S2
+
+! VLAN 100 operaciones
+interface FastEthernet1/0.100
+ encapsulation dot1Q 100
+ ip address 172.20.2.1 255.255.255.224
+
+! VLAN 110 RRHH
+interface FastEthernet1/0.110
+ encapsulation dot1Q 110
+ ip address 172.20.2.33 255.255.255.240
+
+! VLAN 120 Fianzas
+interface FastEthernet1/0.120
+ encapsulation dot1Q 120
+ ip address 172.20.2.49 255.255.255.240
+
+! VLAN 130 Seguridad
+interface FastEthernet1/0.130
+ encapsulation dot1Q 130
+ ip address 172.20.2.65 255.255.255.240
+
+! Interfaz hacia firewall perimetral
+interface FastEthernet0/1
+ ip address 192.168.1.2 255.255.255.252
+ no shutdown
+
+! Interfaz Trunk
+interface FastEthernet1/1
+ no ip address
+ no shutdown
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Configuración de Routers" duration="0">
+        <h2 is-upgraded>En Router1-S1 (R1-S1) - Sede 1</h2>
+<h3 is-upgraded>Interfaces de conexión</h3>
+<pre><code>enable
+config t
+hostname Router1-S1
+
+! Interfaz hacia Router0-S1
+interface FastEthernet1/0
+ ip address 192.168.1.1 255.255.255.252
+ no shutdown
+
+! Interfaz hacia Router INTERMEDIO
+interface FastEthernet0/0
+ ip address 172.20.0.1 255.255.255.252
+ no shutdown
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router INTERMEDIO</h2>
+<h3 is-upgraded>Interfaces de conexión</h3>
+<pre><code>enable
+config t
+hostname RouterIntermedio
+
+! Interfaz hacia Router1-S1
+interface FastEthernet0/0
+ ip address 172.20.0.2 255.255.255.252
+ no shutdown
+
+! Interfaz hacia Router2-S2
+interface FastEthernet1/0
+ ip address 172.20.0.5 255.255.255.252
+ no shutdown
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router2-S2 (R2-S2) - Sede 2</h2>
+<h3 is-upgraded>Interfaces de conexión</h3>
+<pre><code>enable
+config t
+hostname Router2-S2
+
+! Interfaz hacia Router INTERMEDIO
+interface FastEthernet0/0
+ ip address 172.20.0.6 255.255.255.252
+ no shutdown
+
+! Interfaz hacia Router3-S2
+interface FastEthernet1/0
+ ip address 192.168.1.1 255.255.255.252
+ no shutdown
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Enrutamiento Estático" duration="0">
+        <h2 is-upgraded>En Router0-S1 (R0-S1)</h2>
+<p>Agregar rutas hacia Sede 2:</p>
+<pre><code>enable
+config t
+
+ip route 172.20.2.0 255.255.255.224 192.168.1.1
+ip route 172.20.2.32 255.255.255.240 192.168.1.1
+ip route 172.20.2.48 255.255.255.240 192.168.1.1
+ip route 172.20.2.64 255.255.255.240 192.168.1.1
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router1-S1 (R1-S1)</h2>
+<p>Agregar rutas hacia Sede 2:</p>
+<pre><code language="language-cisco" class="language-cisco">enable
+config t
+
+ip route 172.20.0.0 255.255.0.0 192.168.1.2
+ip route 172.20.2.0 255.255.255.224 172.20.0.2
+ip route 172.20.2.32 255.255.255.240 172.20.0.2
+ip route 172.20.2.48 255.255.255.240 172.20.0.2
+ip route 172.20.2.64 255.255.255.240 172.20.0.2
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router INTERMEDIO</h2>
+<p>Agregar rutas hacia ambas sedes:</p>
+<pre><code>enable
+config t
+
+! Rutas hacia Sede 1
+ip route 172.20.0.0 255.255.224.0 172.20.0.1
+ip route 172.20.0.0 255.255.255.0 172.20.0.1
+ip route 172.20.1.0 255.255.255.240 172.20.0.1
+
+! Rutas hacia Sede 2
+ip route 172.20.2.0 255.255.255.224 172.20.0.6
+ip route 172.20.2.32 255.255.255.240 172.20.0.6
+ip route 172.20.2.48 255.255.255.240 172.20.0.6
+ip route 172.20.2.64 255.255.255.240 172.20.0.6
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router2-S2 (R2-S2)</h2>
+<p>Agregar rutas hacia Sede 1 y Sede 2:</p>
+<pre><code>enable
+config t
+
+! Rutas hacia Sede 1
+ip route 172.20.0.0 255.255.224.0 172.20.0.5
+ip route 172.20.0.0 255.255.255.0 172.20.0.5
+ip route 172.20.1.0 255.255.255.240 172.20.0.5
+
+! Rutas hacia Sede 2 (su vecino R3-S2)
+ip route 172.20.2.0 255.255.255.224 192.168.1.2
+ip route 172.20.2.32 255.255.255.240 192.168.1.2
+ip route 172.20.2.48 255.255.255.240 192.168.1.2
+ip route 172.20.2.64 255.255.255.240 192.168.1.2
+
+end
+write memory
+</code></pre>
+<h2 is-upgraded>En Router3-S2 (R3-S2)</h2>
+<p>Agregar rutas hacia Sede 1:</p>
+<pre><code>enable
+config t
+
+ip route 172.20.0.0 255.255.224.0 192.168.1.1
+ip route 172.20.0.0 255.255.255.0 192.168.1.1
+ip route 172.20.1.0 255.255.255.240 192.168.1.1
+
+end
+write memory
+</code></pre>
+
+
+      </google-codelab-step>
+    
+      <google-codelab-step label="Verificación y Pruebas" duration="0">
+        <h2 is-upgraded>Comandos de verificación en Switches</h2>
+<h3 is-upgraded>1. Verificar VLANs creadas</h3>
+<pre><code>show vlan brief
+</code></pre>
+<p>Debe mostrar todas las VLANs (10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130)</p>
+<h3 is-upgraded>2. Verificar asignación de interfaces</h3>
+<pre><code>show interfaces switchport
+show interfaces FastEthernet0/1 switchport
+</code></pre>
+<p>Debe mostrar que cada interfaz está en su VLAN correspondiente</p>
+<h3 is-upgraded>3. Verificar trunk</h3>
+<pre><code>show interfaces trunk
+</code></pre>
+<p>Debe mostrar la interfaz FastEthernet0/1 como trunk</p>
+<h2 is-upgraded>Comandos de verificación en Routers</h2>
+<h3 is-upgraded>1. Verificar interfaces</h3>
+<pre><code>show ip interface brief
+</code></pre>
+<p>Debe mostrar todas las interfaces UP:</p>
+<ul>
+<li>Interfaces FastEthernet conectadas</li>
+<li>Subinterfaces VLAN con sus IPs</li>
+</ul>
+<h3 is-upgraded>2. Verificar tabla de rutas</h3>
+<pre><code>show ip route
+show ip route static
+show ip route connected
+</code></pre>
+<h3 is-upgraded>3. Verificar conectividad (Ping)</h3>
+<p><strong>Desde R0-S1:</strong></p>
+<pre><code>ping 172.20.2.1    ! R3-S2 gateway VLAN 100
+ping 172.20.2.33   ! R3-S2 gateway VLAN 110
+</code></pre>
+<p><strong>Desde R1-S1:</strong></p>
+<pre><code>ping 172.20.2.1
+ping 172.20.0.33   ! R0-S1
+</code></pre>
+<p><strong>Desde Router INTERMEDIO:</strong></p>
+<pre><code language="language-cisco" class="language-cisco">ping 172.20.0.33   ! R0-S1
+ping 172.20.0.1    ! R1-S1
+ping 172.20.2.1    ! R3-S2
+</code></pre>
+<p><strong>Desde PC a PC (entre sedes):</strong></p>
+<pre><code>PC5 (Sede 1, VLAN 60) → ping 172.20.2.1 (PC9 Sede 2, VLAN 100)
+</code></pre>
+<h2 is-upgraded>Verificación de conectividad inter-VLAN</h2>
+<pre><code>! Desde PC en VLAN 10 (172.20.0.x) ping a PC en VLAN 20 (172.20.0.x)
+ping 172.20.0.65
+
+! Desde PC en Sede 1 a PC en Sede 2
+ping 172.20.2.1
+</code></pre>
+<p>Esta configuración permite que:</p>
+<ul>
+<li>Los departamentos dentro de la misma sede se comuniquen</li>
+<li>Los departamentos entre diferentes sedes se comuniquen</li>
+<li>Cada VLAN está segmentada y tiene su propio rango de IPs</li>
+<li>Los routers actúan como gateways entre VLANs</li>
+</ul>
+
+
+      </google-codelab-step>
+    
+  </google-codelab>
+
+  <script src="https://storage.googleapis.com/claat-public/native-shim.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/custom-elements.min.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/prettify.js"></script>
+  <script src="https://storage.googleapis.com/claat-public/codelab-elements.js"></script>
+  <script src="//support.google.com/inapp/api.js"></script>
+
+</body>
+</html>
