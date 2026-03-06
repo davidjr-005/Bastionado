@@ -77,7 +77,7 @@ necesarios para la restauración y elimina puntos únicos de fallo en la cadena.
 
 ---
 
-## FASE 2: Stack LAMP + Bacula
+## FASE 1: Stack LAMP + Bacula
 
 ```bash
 # PASO 7: Instalar stack LAMP (base para Baculum Web Interface)
