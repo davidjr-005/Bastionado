@@ -2,17 +2,37 @@
 
 ## Resumen ejecutivo
 
-El TP-Link Archer AX55 es un router Wi-Fi 6 (802.11ax) de gama media orientado a uso doméstico y SOHO (Small Office/Home Office), con capacidad AX3000, soporte para 2.4 GHz y 5 GHz simultáneos, cuatro puertos Gigabit Ethernet, puerto USB 3.0 para almacenamiento compartido, y servidor VPN integrado (OpenVPN y WireGuard). A pesar de ser un dispositivo orientado al consumidor, su historial de vulnerabilidades y su exposición como puerta de entrada a redes domésticas lo convierten en un objetivo de alto valor para atacantes.
+El TP-Link Archer AX55 es un router Wi-Fi 6 (802.11ax) de gama media orientado a uso doméstico
+y SOHO (Small Office/Home Office), con capacidad AX3000, soporte para 2.4 GHz y 5 GHz
+simultáneos, cuatro puertos Gigabit Ethernet, puerto USB 3.0 para almacenamiento compartido, y
+servidor VPN integrado (OpenVPN y WireGuard). A pesar de ser un dispositivo orientado al
+consumidor, su historial de vulnerabilidades y su exposición como puerta de entrada a redes
+domésticas lo convierten en un objetivo de alto valor para atacantes.
 
-Esta guía recoge las medidas de bastionado ordenadas por criticidad, justificadas técnicamente y vinculadas a CVEs reales publicados entre 2022 y 2026 en la familia Archer de TP-Link. El objetivo es reducir la superficie de ataque al mínimo operativo sin comprometer la funcionalidad legítima del dispositivo.
+Esta guía recoge las medidas de bastionado ordenadas por criticidad, justificadas técnicamente y
+vinculadas a CVEs reales publicados entre 2022 y 2026 en la familia Archer de TP-Link. El
+objetivo es reducir la superficie de ataque al mínimo operativo sin comprometer la funcionalidad
+legítima del dispositivo.
 
-> **Referencia al emulador:** Todas las rutas de configuración indicadas en esta guía han sido verificadas sobre el emulador web oficial de TP-Link, accesible en https://www.tp-link.com/us/support/emulator/. El emulador permite explorar la interfaz de administración sin disponer del hardware físico.
+> **Referencia al emulador:** Todas las rutas de configuración indicadas en esta guía han sido
+> verificadas sobre el emulador web oficial de TP-Link, accesible en
+> [https://www.tp-link.com/us/support/emulator/](https://www.tp-link.com/us/support/emulator/).
+> El emulador permite explorar la interfaz de administración sin disponer del hardware físico.
 
-***
+
+
+![Emulador TP-Link AX55](img/17.png)
+
+## Usaremos la versión V4 del emulador:
+
+![Emulador TP-Link AX55 Version](img/1.png)
+
+---
 
 ## 1. Superficie de ataque y threat model
 
-Antes de aplicar medidas, es necesario identificar los vectores de ataque relevantes para este dispositivo:
+Antes de aplicar medidas, es necesario identificar los vectores de ataque relevantes para este
+dispositivo:
 
 | Vector | Descripción | Probabilidad | Impacto |
 |--------|-------------|-------------|---------|
@@ -24,385 +44,381 @@ Antes de aplicar medidas, es necesario identificar los vectores de ataque releva
 | Explotación de vulnerabilidades conocidas (CVEs) | Firmware sin parchear vulnerable a RCE, command injection o auth bypass | Alta | Crítico |
 | Ataque físico (reset de fábrica) | Acceso físico al botón de reset restaura configuración por defecto | Baja | Alto |
 
-***
+---
 
-## 2. CVEs relevantes en la familia Archer (2022–2026)
+## 2. CVEs relevantes en la familia Archer (2022-2026)
 
-La familia Archer de TP-Link ha acumulado un historial significativo de vulnerabilidades. Aunque algunos CVEs afectan formalmente a otros modelos de la misma familia, todos comparten base de código y módulos de servicio similares al AX55, lo que hace estas vulnerabilidades relevantes por proximidad arquitectónica.
+La familia Archer de TP-Link ha acumulado un historial significativo de vulnerabilidades. Aunque
+algunos CVEs afectan formalmente a otros modelos de la misma familia, todos comparten base de
+código y módulos de servicio similares al AX55, lo que hace estas vulnerabilidades relevantes por
+proximidad arquitectónica.
 
 | CVE | CVSS | Afecta a | Descripción | Medida de mitigación |
 |-----|------|---------|-------------|----------------------|
-| CVE-2025-15517 | Crítica | Archer NX200/NX210/NX500/NX600 | Authorization Bypass: falta de comprobación de autenticación en endpoints HTTP CGI, permite operaciones privilegiadas (subida de firmware, cambios de configuración) sin credenciales | Desactivar admin remota WAN + actualizar firmware |
+| CVE-2025-15517 | Crítica | Archer NX200/NX210/NX500/NX600 | Authorization Bypass: falta de comprobación de autenticación en endpoints HTTP CGI, permite operaciones privilegiadas sin credenciales | Desactivar admin remota WAN + actualizar firmware |
 | CVE-2025-15518 | Alta | Archer NX series | Hardcoded cryptographic key en archivos de configuración, permite descifrar y manipular la configuración del dispositivo | Actualizar firmware |
 | CVE-2025-15519 | Alta | Archer NX series | Input validation flaw en CGI endpoints, permite ejecución de comandos arbitrarios | Actualizar firmware + deshabilitar servicios expuestos |
-| CVE-2025-14756 | Alta | Archer MR600 v5 | Command Injection autenticado en la interfaz de administración vía browser console, permite ejecución de comandos del sistema con privilegios de root | Cambiar contraseña admin, actualizar firmware |
+| CVE-2025-14756 | Alta | Archer MR600 v5 | Command Injection autenticado en la interfaz de administración, permite ejecución de comandos del sistema con privilegios de root | Cambiar contraseña admin, actualizar firmware |
 | CVE-2025-7850 | Alta | Archer con WireGuard | OS Command Injection vía configuración WireGuard VPN en el panel web | No usar WireGuard en firmware sin parchear |
 | CVE-2025-7851 | Alta | Archer (múltiples) | Código de debug residual permite acceso root no autorizado | Actualizar firmware |
 | CVE-2025-62501 | 7.0 | Archer (múltiples) | SSH Hostkey misconfiguration en módulo `tmpserver`, permite ataque MITM para captura de credenciales | Deshabilitar SSH si no se usa, actualizar firmware |
-| CVE-2026-0630 / CVE-2026-22221-22229 | Hasta 8.6 | Archer BE230 Wi-Fi 7 | Múltiples OS Command Injection en módulos web, VPN, cloud y backup de configuración, permite control total del dispositivo con credenciales admin | Principio de mínimo privilegio en acceso admin |
-| CVE-2022-30075 | Alta | Archer AX50 | RCE autenticado en firmware 210730, permite toma de control completa | Actualizar a firmware ≥ 220303 |
+| CVE-2026-0630 / CVE-2026-22221-22229 | Hasta 8.6 | Archer BE230 Wi-Fi 7 | Múltiples OS Command Injection en módulos web, VPN, cloud y backup de configuración | Principio de mínimo privilegio en acceso admin |
+| CVE-2022-30075 | Alta | Archer AX50 | RCE autenticado en firmware 210730, permite toma de control completa | Actualizar a firmware >= 220303 |
 
-> **Fuentes:** TP-Link Security Advisory Portal, NVD/NIST, CSA Singapore Advisory AL-2026-028, INCIBE.
+> **Fuentes:** TP-Link Security Advisory Portal, NVD/NIST, CSA Singapore Advisory AL-2026-028,
+> INCIBE.
 
-***
+---
 
 ## 3. Medidas de bastionado
 
-Las medidas están organizadas de mayor a menor criticidad. Para cada una se indica la ruta exacta en el panel web del AX55, la justificación técnica y el riesgo asociado si se omite.
+Las medidas están organizadas de mayor a menor criticidad. Para cada una se indica la ruta exacta
+en el panel web del AX55, la justificación técnica y el riesgo asociado si se omite.
 
-***
+---
 
 ### 3.1 Actualizar el firmware inmediatamente
 
-**Criticidad:** 🔴 CRÍTICA  
-**Ruta:** `Advanced → System → Firmware Upgrade`
+**Criticidad:** CRITICA
+**Ruta:** `Advanced -> System -> Firmware Upgrade`
 
-La mayoría de CVEs listados en la sección anterior tienen parches publicados. Un dispositivo con firmware desactualizado es potencialmente explotable de forma remota. La CSA de Singapur emitió en marzo de 2026 un aviso urgente instando a usuarios de dispositivos Archer a actualizar de inmediato tras la publicación de CVE-2025-15517.
+La mayoría de CVEs listados en la sección anterior tienen parches publicados. Un dispositivo con
+firmware desactualizado es potencialmente explotable de forma remota. La CSA de Singapur emitió
+en marzo de 2026 un aviso urgente instando a usuarios de dispositivos Archer a actualizar de
+inmediato tras la publicación de CVE-2025-15517.
 
-**Pasos:**
-1. Navegar a `Advanced → System → Firmware Upgrade`
-2. Seleccionar **Check for Updates** para buscar automáticamente
-3. Alternativamente, descargar el firmware manualmente desde `https://www.tp-link.com/es/support/download/archer-ax55/` y cargarlo manualmente
-4. Verificar siempre el **hash SHA256** del archivo descargado antes de instalarlo
-5. Activar **Auto Firmware Upgrade** (si está disponible en el firmware actual) para recibir parches automáticamente
+Al acceder al panel de administración del router, lo primero que aparece es una ventana emergente en la pantalla Network Map informando de que existe una nueva versión de firmware disponible y que la actualización automática programada fue pospuesta porque había usuarios utilizando la red en ese momento. Desde esa ventana se ofrece la opción de pulsar Update Now, que redirige directamente a la sección Advanced -> System -> Firmware Update. En dicha sección se puede realizar la actualización de tres formas: mediante Online Update (pulsando el botón UPDATE, que descarga e instala automáticamente la versión 1.0.2 Build 20190421 desde los servidores de TP-Link), mediante Local Update (subiendo manualmente el archivo de firmware descargado previamente desde el portal oficial, lo que permite verificar el hash SHA256 antes de instalarlo), o mediante EasyMesh Satellite Update para actualizar los nodos satélite vinculados. La vía recomendada para un entorno controlado es la actualización local previa verificación del hash, aunque la actualización online es suficiente para la mayoría de usuarios domésticos.
 
-> **Advertencia:** Investigadores han documentado que TP-Link ha publicado parches incompletos en el pasado (como el de CVE-2024-21827) que dejaban funcionalidad de debug activa, generando nuevos vectores de ataque (CVE-2025-7851). Revisar siempre el changelog completo del firmware antes de actualizar.
+![Firmware Update - aviso en Network Map](img/2.png)
 
-***
+![Firmware Update - pantalla principal](img/3.png)
+
+---
 
 ### 3.2 Cambiar credenciales de administración por defecto
 
-**Criticidad:** 🔴 CRÍTICA  
-**Ruta:** `Advanced → System → Administration → Account Management`
+**Criticidad:** CRITICA
+**Ruta:** `Advanced -> System -> Administration`
 
-Las credenciales `admin/admin` o derivadas del número de serie del dispositivo son las primeras que prueban las botnets (Mirai y variantes). CVE-2025-14756 requiere autenticación previa, lo que significa que credenciales robustas son una barrera efectiva incluso frente a exploits que requieren acceso autenticado.
+Las credenciales `admin/admin` o derivadas del número de serie del dispositivo son las primeras
+que prueban las botnets (Mirai y variantes). CVE-2025-14756 requiere autenticación previa, lo que
+significa que credenciales robustas son una barrera efectiva incluso frente a exploits que
+requieren acceso autenticado.
+
+En el emulador cambiamos la contraseña antigua por otra mas nueva.
+
+![Administration - Change Password](img/4.png)
+
+Para mayor seguridad seguir estos pasos es la mejor opción:
 
 **Requisitos de la contraseña:**
-- Longitud mínima: **16 caracteres**
-- Combinación de: mayúsculas, minúsculas, números y símbolos
+- Longitud minima: 16 caracteres
+- Combinacion de: mayusculas, minusculas, numeros y simbolos
 - No reutilizar contraseñas de otros servicios
 - Almacenar en un gestor de contraseñas (Bitwarden, KeePassXC)
 
 **Adicionalmente:**
-- Cambiar el nombre de usuario (no usar el nombre de usuario `admin` por defecto)
-- Configurar un **timeout de sesión** corto (5-10 minutos) para cerrar sesiones administrativas inactivas
+- Cambiar el nombre de usuario administrador (no usar `admin` por defecto)
+- Configurar un timeout de sesion corto (5-10 minutos) para cerrar sesiones administrativas
+  inactivas
 
-***
+---
 
-### 3.3 Deshabilitar la administración remota desde WAN
+### 3.3 Deshabilitar la administracion remota desde WAN
 
-**Criticidad:** 🔴 CRÍTICA  
-**Ruta:** `Advanced → System → Administration → Remote Management`
+**Criticidad:** CRITICA
+**Ruta:** `Advanced -> System -> Administration -> Remote Management`
 
-CVE-2025-15517 demostró que la ausencia de comprobaciones de autenticación en ciertos endpoints CGI del servidor HTTP del router permite operaciones privilegiadas sin credenciales. Si la administración remota está activa, este tipo de vulnerabilidades son explotables directamente desde Internet.
+CVE-2025-15517 demostro que la ausencia de comprobaciones de autenticacion en ciertos endpoints
+CGI del servidor HTTP del router permite operaciones privilegiadas sin credenciales. Si la
+administracion remota esta activa, este tipo de vulnerabilidades son explotables directamente
+desde Internet.
 
-**Pasos:**
-1. Verificar que **Remote Management** está desactivado (debería estarlo por defecto)
-2. Confirmar que no hay ningún port-forwarding manual al puerto 80, 443 o al puerto de administración
-3. Verificar desde el exterior con: `curl -k https://[IP-WAN]:443` — debe dar timeout o connection refused
+En el emulador se desactiva **Remote Management**
+Tambien se verifica que **Local Management via HTTPS** esta activo y
+restringido a **Specified Devices** (dos MACs registradas).
 
-> **Regla de oro:** Si se necesita acceso remoto al router, usar VPN antes de acceder al panel (ver sección 3.11). Nunca exponer el panel directamente a Internet.
+![Administration - Remote Management desactivado](img/5.png)
 
-***
+---
 
-### 3.4 Forzar HTTPS y cambiar el puerto de administración
+### 3.4 Forzar HTTPS para la administracion local
 
-**Criticidad:** 🟠 ALTA  
-**Ruta:** `Advanced → System → Administration`
+**Criticidad:** ALTA
+**Ruta:** `Advanced -> System -> Administration -> Local Management`
 
-Con HTTP en texto plano, las credenciales se transmiten sin cifrar. CVE-2025-62501 sobre SSH Hostkey misconfiguration ejemplifica cómo la ausencia de cifrado en protocolos de gestión puede derivar en capturas de credenciales por MITM.
+Con HTTP en texto plano, las credenciales se transmiten sin cifrar. CVE-2025-62501 sobre SSH
+Hostkey misconfiguration ejemplifica como la ausencia de cifrado en protocolos de gestion puede
+derivar en capturas de credenciales por MITM.
 
-**Pasos:**
-1. Activar **HTTPS** para el acceso al panel web
-2. Cambiar el puerto de administración de `443` a un puerto no estándar (ej. `58443`)
-3. Aceptar el certificado autofirmado en el navegador y fijarlo como excepción permanente
+En el emulador se habilita **Local Management via HTTPS** y se verifica que el acceso
+esta restringido a dispositivos especificados por MAC, lo que combina cifrado en transito con
+control de acceso por origen.
 
-***
+![Administration - Local Management via HTTPS con dispositivos especificados](img/6.png)
+
+---
 
 ### 3.5 Deshabilitar UPnP
 
-**Criticidad:** 🟠 ALTA  
-**Ruta:** `Advanced → NAT Forwarding → UPnP`
+**Criticidad:** ALTA
+**Ruta:** `Advanced -> NAT Forwarding -> UPnP`
 
-UPnP (Universal Plug and Play) permite a cualquier dispositivo de la red interna abrir puertos en el firewall del router **sin autenticación**. Este mecanismo ha sido abusado por malware para crear canales de comunicación encubiertos y exponer servicios internos a Internet. No existe ningún caso de uso doméstico que justifique mantener UPnP activo si se gestionan manualmente los port-forwardings necesarios.
+UPnP (Universal Plug and Play) permite a cualquier dispositivo de la red interna abrir puertos en
+el firewall del router sin autenticacion. Este mecanismo ha sido abusado por malware para crear
+canales de comunicacion encubiertos y exponer servicios internos a Internet. No existe ningun caso
+de uso doméstico que justifique mantener UPnP activo si se gestionan manualmente los
+port-forwardings necesarios.
 
-**Pasos:**
-1. Navegar a `Advanced → NAT Forwarding → UPnP`
-2. Deshabilitar completamente
-3. Configurar manualmente los reenvíos de puertos necesarios (consolas de videojuegos, servidores locales, etc.) en `Advanced → NAT Forwarding → Port Forwarding`
+En el emulador se desactiva **UPnP**.
 
-***
+![UPnP desactivado](img/7.png)
+
+---
 
 ### 3.6 Configurar WPA3 y deshabilitar WPS
 
-**Criticidad:** 🟠 ALTA  
-**Ruta:** `Wireless → Wireless Settings → Security`
+**Criticidad:** ALTA
+**Ruta:** `Wireless -> Wireless Settings -> Security`
 
-WEP es completamente inseguro (roto en minutos). WPA con TKIP es vulnerable a ataques prácticos. WPA2-Personal con contraseñas débiles es susceptible a ataques de diccionario offline contra el handshake capturado con herramientas como `aircrack-ng` o `hashcat`. WPS con autenticación por PIN es vulnerable a fuerza bruta (el PIN de 8 dígitos se verifica en dos bloques de 4, reduciendo el espacio de búsqueda a ~11.000 combinaciones).
+WEP es completamente inseguro. WPA con TKIP es vulnerable a ataques practicos. WPA2-Personal con
+contraseñas debiles es susceptible a ataques de diccionario offline contra el handshake capturado
+con herramientas como `aircrack-ng` o `hashcat`. WPS con autenticacion por PIN es vulnerable a
+fuerza bruta (el PIN de 8 digitos se verifica en dos bloques de 4, reduciendo el espacio de
+busqueda a ~11.000 combinaciones).
 
-**Pasos:**
-1. Navegar a `Wireless → Wireless Settings → Security` para cada banda (2.4 GHz y 5 GHz)
-2. Seleccionar **WPA3-Personal** o **WPA2/WPA3-Personal** (modo mixto para compatibilidad con dispositivos que no soportan WPA3)
-3. Establecer contraseña Wi-Fi de **mínimo 20 caracteres** aleatorios
-4. Deshabilitar WPS: `Advanced → Wireless → WPS → deshabilitar`
+En el emulador se configura: SSID `TomMate` con **WPA3-Personal**
+seleccionado, contraseña `Kv#KfirAPQm` (u otra mas robusta), y **Hide SSID** activo.
 
-> **Nota sobre WPA3:** WPA3 usa el protocolo SAE (Simultaneous Authentication of Equals) en lugar del handshake de 4 vías de WPA2, lo que elimina los ataques de diccionario offline.
+![Wireless Settings - WPA3 y Hide SSID](img/8.png)
 
-***
+> **Nota sobre WPA3:** WPA3 usa el protocolo SAE (Simultaneous Authentication of Equals) en
+> lugar del handshake de 4 vias de WPA2, lo que elimina los ataques de diccionario offline.
+
+---
 
 ### 3.7 Segmentar la red: red de invitados e IoT
 
-**Criticidad:** 🟠 ALTA  
-**Ruta:** `Advanced → Wireless → Guest Network`
+**Criticidad:** ALTA
+**Ruta:** `Advanced -> Wireless -> Guest Network`
 
-Los dispositivos IoT (cámaras IP, smart TVs, asistentes de voz, domótica) son vectores de ataque frecuentes con escasas garantías de seguridad. Si están en la misma red que los equipos principales (ordenadores, NAS, servidores locales), un compromiso de cualquier dispositivo IoT puede derivar en movimiento lateral hacia toda la red.
+Los dispositivos IoT (camaras IP, smart TVs, asistentes de voz, domotica) son vectores de ataque
+frecuentes con escasas garantias de seguridad. Si estan en la misma red que los equipos
+principales, un compromiso de cualquier dispositivo IoT puede derivar en movimiento lateral hacia
+toda la red.
 
-**Pasos:**
-1. Crear una red Wi-Fi separada para dispositivos IoT y visitantes: `Advanced → Wireless → Guest Network`
-2. Activar **Access Control** para que la red de invitados/IoT no pueda alcanzar la LAN principal (opción "Access to local network: Disabled")
-3. Activar **Client Isolation** (si está disponible) para que los dispositivos IoT tampoco puedan comunicarse entre sí
-4. Considerar asignar a los dispositivos IoT una IP en un rango diferente para facilitar la identificación en logs
+En el emulador se activa la red de invitados configurada con SSID `Franchesco`, seguridad
+**WPA2/WPA3-Personal**, contraseña `Mkda@#adfKEI`, **Hide SSID** activo, control de ancho de
+banda habilitado (3 Mbps de subida), y tiempo efectivo limitado (3 horas 24 minutos). Las
+opciones **Allow guests to see each other** y **Allow guests to access your local network**
+se desactivan, para aislar la red de invitados.
 
-**Esquema de red recomendado:**
+![Guest Network - configuracion y aislamiento](img/9.png)
 
-```
-Internet
-    │
-[Archer AX55]
-    │
-    ├── LAN Principal (192.168.1.0/24)
-    │       ├── PC, portátiles, NAS, servidores
-    │       └── Acceso total entre dispositivos
-    │
-    └── Red IoT/Invitados (192.168.2.0/24) [Guest Network]
-            ├── Smart TV, cámaras, Alexa, domótica
-            ├── Client Isolation activo
-            └── Sin acceso a LAN Principal
-```
-
-***
+---
 
 ### 3.8 Deshabilitar servicios innecesarios
 
-**Criticidad:** 🟠 ALTA
+**Criticidad:** ALTA
 
-Cada servicio activo es una potencial superficie de ataque. El principio de mínimo privilegio aplicado a servicios de red dicta que cualquier servicio no estrictamente necesario debe estar desactivado.
+Cada servicio activo es una potencial superficie de ataque. El principio de minimo privilegio
+aplicado a servicios de red dicta que cualquier servicio no estrictamente necesario debe estar
+desactivado.
 
-| Servicio | Ruta en el panel | Riesgo | Acción |
-|----------|-----------------|--------|--------|
-| Telnet | `Advanced → System` | Protocolo en texto plano, credenciales expuestas | **Deshabilitar** |
-| FTP del NAS (USB) | `Advanced → USB Settings → File Sharing` | Exposición de archivos, autenticación débil por defecto | Deshabilitar si no se usa |
-| UPnP | `Advanced → NAT Forwarding → UPnP` | Apertura de puertos sin autenticación | **Deshabilitar** |
-| IPTV/IGMP Proxy | `Advanced → Network → IPTV` | Amplifica tráfico multicast innecesariamente | Deshabilitar si no se usa IPTV |
-| Ping desde WAN | `Advanced → Security → Firewall` | Permite reconocimiento de la IP pública del router | **Deshabilitar** |
-| IPv6 | `Advanced → IPv6` | Si no se usa, reduce la superficie de ataque | Deshabilitar si no es necesario |
-| SSH (si existe) | `Advanced → System` | CVE-2025-62501 afecta a la implementación SSH | Deshabilitar si no se usa |
+#### USB Storage y FTP
 
-***
+En el emulador se observa la seccion de USB Storage con los cuatro metodos de acceso disponibles:
+Samba, Local FTP, Internet FTP y Local SFTP. **Todos los desactivamos**, que es el estado
+correcto si no se usa el almacenamiento USB compartido.
+Adicionalmente, aplicamos un usuario **RealBetis** con permisos de solo lectura configurado
+en **Secure Sharing**.
 
-### 3.9 Configurar el Firewall SPI y protección DoS
+![USB Storage - metodos de acceso y Secure Sharing](img/10.png)
 
-**Criticidad:** 🟠 ALTA  
-**Ruta:** `Advanced → Security → Firewall`
+#### IPTV/VLAN e IGMP
 
-El firewall SPI (Stateful Packet Inspection) analiza el estado de cada conexión, descartando paquetes que no correspondan a una conexión iniciada desde la red interna. Sin él, el router aceptaría tráfico entrante no solicitado.
+En el emulador se desactiva **IPTV/VLAN** y que **IGMP Proxy** e **IGMP
+Snooping** tambien se desactivan, con IGMP Version en V3. Esta es la configuracion correcta
+si no se usa IPTV.
 
-**Pasos:**
-1. Verificar que **SPI Firewall** está activo (activo por defecto — confirmar que no se ha desactivado)
-2. Activar protecciones específicas:
-   - **DoS Protection:** activo
-   - **ICMP-Flood Attack Filtering:** activo (threshold: 50 paquetes/seg)
-   - **UDP-Flood Attack Filtering:** activo (threshold: 500 paquetes/seg)
-   - **TCP-SYN-Flood Attack Filtering:** activo (threshold: 50 paquetes/seg)
-3. Activar **ALG (Application Layer Gateway)** solo para los protocolos estrictamente necesarios
+![IPTV/VLAN e IGMP desactivados](img/11.png)
 
-***
+#### IPv6
+
+En el emulador se desactiva **IPv6**. Si el ISP no
+proporciona conectividad IPv6 nativa o no se necesita, es recomendable mantenerlo desactivado para
+reducir la superficie de ataque.
+
+![IPv6 desactivado](img/13.png)
+
+---
+
+### 3.9 Configurar el Firewall SPI
+
+**Criticidad:** ALTA
+**Ruta:** `Advanced -> Security -> Firewall`
+
+El firewall SPI (Stateful Packet Inspection) analiza el estado de cada conexion, descartando
+paquetes que no correspondan a una conexion iniciada desde la red interna. Sin el, el router
+aceptaria trafico entrante no solicitado.
+
+En el emulador se verifica que **SPI Firewall** esta activo. Las opciones **Respond
+to Pings from LAN** y **Respond to Pings from WAN** se desactivan.
+
+**No responder a pings desde WAN impide que el router sea identificado en escaneos de red desde
+Internet**
+
+![Firewall SPI activo, pings desactivados](img/12.png)
+
+---
 
 ### 3.10 Cambiar el SSID por defecto y gestionar la visibilidad
 
-**Criticidad:** 🟡 MEDIA  
-**Ruta:** `Wireless → Wireless Settings → Wireless Name (SSID)`
+**Criticidad:** MEDIA
+**Ruta:** `Wireless -> Wireless Settings`
 
-Un SSID que revela el modelo del router (ej. `TP-Link_AX55_XXXX`) permite a un atacante identificar inmediatamente el dispositivo y buscar exploits específicos sin necesidad de reconocimiento adicional.
+Un SSID que revela el modelo del router (ej. `TP-Link_AX55_XXXX`) permite a un atacante
+identificar inmediatamente el dispositivo y buscar exploits especificos sin necesidad de
+reconocimiento adicional.
 
-**Pasos:**
-1. Cambiar el SSID a un nombre que no revele fabricante, modelo ni datos personales (nombre, dirección, etc.)
-2. Aplicar a ambas bandas (2.4 GHz y 5 GHz) y a la red de invitados/IoT
+En el emulador el SSID ha sido cambiado a `TomMate`, que no revela informacion
+sobre el fabricante ni el modelo. **Hide SSID** esta activo.
 
-> **Sobre ocultar el SSID:** No constituye una medida de seguridad robusta. Una red con SSID oculto es trivialmente detectable con herramientas de análisis Wi-Fi como `airodump-ng` o `Wireshark`. Además, los dispositivos que se conectan a redes ocultas emiten probe requests con el SSID en texto plano, lo que puede facilitar ataques de gemelo malicioso (evil twin).
+IMAGEN------------------------------------------------------------------------------------------------
 
-***
+---
 
 ### 3.11 Configurar acceso remoto seguro mediante VPN
 
-**Criticidad:** 🟡 MEDIA  
-**Ruta:** `Advanced → VPN Server → OpenVPN`
+**Criticidad:** MEDIA
+**Ruta:** `Advanced -> VPN Server -> OpenVPN`
 
-Si se necesita acceso al router o a la red doméstica desde el exterior, la alternativa segura es establecer un túnel VPN en lugar de exponer servicios directamente.
+Si se necesita acceso al router o a la red domestica desde el exterior, la alternativa segura es
+establecer un tunel VPN en lugar de exponer servicios directamente.
+
+En el emulador se puede observar la seccion VPN Server con las cuatro opciones disponibles:
+**OpenVPN**, **PPTP**, **L2TP/IPSec** y **WireGuard**, ademas de la seccion **Connections**. Se
+ha optado por deshabilitar todos los servidores VPN, que es la configuracion correcta cuando no
+se necesita acceso remoto. En el caso de necesitarlo, OpenVPN es la unica opcion recomendada
+del conjunto disponible.
+
+![VPN Server - OpenVPN desactivado, sin certificado](img/14.png)
+
+En la seccion **VPN Client** se cambia igualmente a desactivado.
+
+![VPN Client desactivado](img/15.png)
 
 **Opciones disponibles en el AX55:**
-- **OpenVPN Server** (recomendado): protocolo maduro, bien auditado, amplia compatibilidad
-- **WireGuard Server:** más moderno y eficiente, pero **se recomienda extrema precaución** dado CVE-2025-7850 (OS Command Injection vía configuración WireGuard) — actualizar firmware antes de habilitarlo
 
-**Configuración recomendada para OpenVPN:**
-- Protocolo: **UDP** (más eficiente)
-- Puerto: no estándar (cambiar del puerto 1194 predeterminado)
-- Cifrado: **AES-256-GCM**
-- Autenticación: certificado + contraseña (autenticación de dos factores)
-- Exportar y almacenar el certificado CA en un lugar seguro; **nunca compartirlo**
+| Protocolo | Recomendacion | Motivo |
+|-----------|--------------|--------|
+| OpenVPN | Recomendado si se necesita VPN | Protocolo maduro, bien auditado, amplia compatibilidad |
+| WireGuard | Usar con precaucion | CVE-2025-7850: OS Command Injection via configuracion WireGuard -- actualizar firmware antes de habilitar |
+| L2TP/IPSec | No recomendado | Protocolo legacy con implementaciones historicamente debiles |
+| PPTP | Prohibido | Roto criptograficamente desde 2012, no ofrece ningun nivel de seguridad real |
 
-***
+---
 
 ### 3.12 Configurar servidores DNS seguros
 
-**Criticidad:** 🟡 MEDIA  
-**Ruta:** `Advanced → Network → Internet → DNS`
+**Criticidad:** MEDIA
+**Ruta:** `Network -> DHCP Server`
 
-Los servidores DNS del ISP pueden no soportar DNSSEC, pueden registrar todas las consultas del hogar y son susceptibles a ataques de envenenamiento de caché (DNS Spoofing/Cache Poisoning).
+Los servidores DNS configurados en el DHCP Server determinan a que resolutor envian sus consultas
+todos los dispositivos de la red. Un DNS no seguro o comprometido puede redirigir trafico
+(DNS hijacking) o registrar todas las consultas de los usuarios.
 
-**Alternativas recomendadas:**
+En el emulador se cambia la configuracion: **Primary DNS** `1.0.0.1` y **Secondary
+DNS** `1.1.1.1` (Cloudflare), que ofrecen resolucion rapida, politica de no registro y soporte
+para DNS over HTTPS. El pool DHCP ha sido reducido de .100 a .115 (16 direcciones) y el DHCP
+Server se habilita para mayor comodidad. Las tres entradas de **Address Reservation** permanecen vinculando MACs
+especificas a IPs fijas.
 
-| Proveedor | Primario | Secundario | Características destacadas |
-|-----------|----------|------------|---------------------------|
-| Quad9 | `9.9.9.9` | `149.112.112.112` | Bloqueo de dominios maliciosos, DNSSEC, privacidad |
-| Cloudflare | `1.1.1.1` | `1.0.0.1` | Alta velocidad, privacy-first, soporta DoH/DoT |
-| NextDNS | Personalizado | Personalizado | Filtrado avanzado por categorías, logs controlables |
+![DHCP Server - DNS seguros y pool reducido](img/16.png)
 
-**Adicionalmente:**
-- Activar **DNS Rebinding Protection** si está disponible: previene que dominios externos resuelvan a IPs privadas, un vector de ataque para comprometer routers y dispositivos internos
-
-***
+---
 
 ### 3.13 Activar y monitorizar los logs del sistema
 
-**Criticidad:** 🟡 MEDIA  
-**Ruta:** `Advanced → System → System Log`
+**Criticidad:** MEDIA
+**Ruta:** `Advanced -> System -> System Log`
 
-Los logs permiten detectar actividad anómala: intentos de acceso repetidos, cambios de configuración no autorizados, conexiones en puertos inusuales o reinicios inesperados del dispositivo.
+Los logs permiten detectar actividad anomala: intentos de acceso repetidos, cambios de
+configuracion no autorizados, conexiones en puertos inusuales o reinicios inesperados del
+dispositivo. Nos aseguramos que el correo sea el oficial.
 
-**Pasos:**
-1. Activar el registro del sistema con nivel de detalle máximo
-2. Configurar **Syslog remoto** si se dispone de un servidor de logs:
-   - Servidor ELK Stack (Elasticsearch + Logstash + Kibana)
-   - Graylog
-   - Solución sencilla: `rsyslog` en un Raspberry Pi
-3. Configurar alertas automáticas (si el firmware lo permite) para: login desde nueva IP, cambio de contraseña, actualización de firmware
+![alt text](img/18.png)
 
-**Indicadores de compromiso (IoC) a buscar en los logs:**
-- Múltiples intentos de login fallidos en corto espacio de tiempo → posible fuerza bruta
-- Cambios de configuración en horarios no habituales → posible acceso no autorizado
-- Reinicio inesperado del dispositivo → posible explotación activa de una vulnerabilidad
-- Nuevas reglas de port-forwarding creadas automáticamente → posible UPnP abusado por malware
+---
 
-***
+### 3.14 Hardening fisico del dispositivo
 
-### 3.14 Hardening del acceso USB
+**Criticidad:** MEDIA
 
-**Criticidad:** 🟡 MEDIA  
-**Ruta:** `Advanced → USB Settings`
-
-El puerto USB 3.0 del AX55 permite compartir almacenamiento en red (FTP, Samba) y conectar impresoras. Si no está configurado correctamente, puede exponer archivos a toda la red o, en escenarios avanzados, actuar como vector de ataque.
-
-**Pasos:**
-1. Deshabilitar el **compartición de archivos USB** si no se usa: `Advanced → USB Settings → File Sharing → deshabilitar`
-2. Si se usa, activar **Secure Sharing** (autenticación usuario/contraseña) y limitar el acceso solo a cuentas específicas
-3. **No conectar memorias USB desconocidas:** el AX55 monta automáticamente cualquier dispositivo USB conectado
-
-***
-
-### 3.15 Hardening físico del dispositivo
-
-**Criticidad:** 🟡 MEDIA
-
-| Medida | Justificación |
+| Medida | Justificacion |
 |--------|---------------|
-| Ubicar el router en zona de acceso restringido | El botón de reset restaura la configuración de fábrica sin autenticación, anulando todas las medidas aplicadas |
-| Deshabilitar el botón WPS físico | `Advanced → Wireless → WPS → desactivar`. Aunque WPS ya esté deshabilitado por software, el botón físico puede reactivarlo |
-| Deshabilitar el botón de LED si no es necesario | No aporta seguridad directa, pero reduce la información visual accesible a terceros sobre el estado del dispositivo |
-| Revisar quién tiene acceso físico al router en entornos compartidos | En pisos compartidos u oficinas, el acceso físico es un vector de ataque real |
+| Ubicar el router en zona de acceso restringido | El boton de reset restaura la configuracion de fabrica sin autenticacion, anulando todas las medidas aplicadas |
+| Deshabilitar el boton WPS fisico | `Advanced -> Wireless -> WPS -> desactivar`. Aunque WPS este deshabilitado por software, el boton fisico puede reactivarlo |
+| Revisar quien tiene acceso fisico al router en entornos compartidos | En pisos compartidos u oficinas, el acceso fisico es un vector de ataque real |
 
-***
+---
 
-## 4. Mantenimiento y revisión periódica
+## 4. Mantenimiento y revision periodica
 
-El bastionado de un router no es una tarea puntual, sino un proceso continuo. Las siguientes acciones deben realizarse de forma regular:
+El bastionado de un router no es una tarea puntual, sino un proceso continuo. Las siguientes
+acciones deben realizarse de forma regular:
 
 | Tarea | Frecuencia | Herramienta |
 |-------|-----------|-------------|
 | Verificar disponibilidad de nuevo firmware | Mensual | Portal oficial TP-Link / Auto-update |
 | Revisar avisos de seguridad de TP-Link | Mensual | https://www.tp-link.com/us/press/security-advisory/ |
-| Revisar logs del sistema | Semanal | Panel web → System Log |
-| Auditar dispositivos conectados a la red | Mensual | `Advanced → Network Map` |
-| Verificar que no hay port-forwardings no reconocidos | Mensual | `Advanced → NAT Forwarding` |
-| Revisar la configuración completa del router | Cada 90 días | Panel web completo |
-| Cambiar contraseñas Wi-Fi | Cada 6-12 meses | `Wireless → Wireless Settings` |
+| Revisar logs del sistema | Semanal | Panel web -> System Log |
+| Auditar dispositivos conectados a la red | Mensual | `Advanced -> Network Map` |
+| Verificar que no hay port-forwardings no reconocidos | Mensual | `Advanced -> NAT Forwarding` |
+| Revisar la configuracion completa del router | Cada 90 dias | Panel web completo |
+| Cambiar contraseñas Wi-Fi | Cada 6-12 meses | `Wireless -> Wireless Settings` |
 
-***
+# ANEXO - Analisis del Manual Oficial TP-Link Archer AX55 desde una Perspectiva de Seguridad
 
-## 5. Checklist de bastionado rápido
+**Fuente:** User Guide AX3000 Gigabit Wi-Fi 6 Router — Archer AX55
+**Referencia:** Documento 1910013469 REV4.0.0, TP-Link 2023
 
-Lista de verificación para auditar el estado de seguridad del dispositivo. Una instalación segura debe tener todos los ítems marcados:
+---
 
-### Crítico (prioridad máxima)
-- [ ] Firmware actualizado a la última versión disponible
-- [ ] Credenciales de administración cambiadas (usuario y contraseña no por defecto)
-- [ ] Administración remota desde WAN desactivada
-- [ ] UPnP desactivado
-- [ ] WPA3 o WPA2/WPA3 configurado en todas las redes Wi-Fi
-- [ ] WPS desactivado (software y botón físico)
+## Por que analizar el manual oficial
 
-### Alto (implementar cuanto antes)
-- [ ] Acceso al panel solo por HTTPS en puerto no estándar
-- [ ] SPI Firewall activo con protección DoS/SYN/ICMP/UDP Flood
-- [ ] Red separada para dispositivos IoT/invitados con Client Isolation activo
-- [ ] Servicios no utilizados desactivados (Telnet, FTP USB, IPv6, SSH, IGMP)
-- [ ] Ping desde WAN desactivado
+A diferencia de guias de terceros o articulos de comunidad, el User Guide es el documento que el fabricante incluye con el producto y que la mayoria de usuarios toma como referencia durante la configuracion inicial. Esto lo convierte en un punto de analisis especialmente relevante: sus recomendaciones, y sobre todo sus silencios, tienen un impacto directo en la seguridad del dispositivo una vez instalado en casa o en una empresa.
 
-### Medio (implementar en segunda fase)
-- [ ] SSID cambiado (sin revelar modelo, marca ni datos personales)
-- [ ] DNS personalizado configurado (Quad9 o Cloudflare)
-- [ ] Logs del sistema activados
-- [ ] Syslog remoto configurado (si se dispone de servidor)
-- [ ] Compartición USB desactivada o con autenticación activada
-- [ ] Contraseña Wi-Fi de mínimo 20 caracteres
+---
 
-### Mantenimiento continuo
-- [ ] Revisión mensual de nuevos avisos de seguridad de TP-Link
-- [ ] Verificación mensual de firmware
-- [ ] Revisión semanal de logs del sistema
-- [ ] Auditoría trimestral de la configuración completa
+## Lo que el manual hace bien
 
-***
+El documento cubre correctamente algunos aspectos basicos. El capitulo dedicado a la administracion del sistema indica de forma clara que debe establecerse una contrasena de acceso al panel web en el primer arranque, y explica como modificarla posteriormente. Del mismo modo, documenta la opcion de habilitar HTTPS para la gestion local y la posibilidad de restringir el acceso al panel a dispositivos concretos mediante su direccion MAC, dos medidas que suponen una mejora real frente a la configuracion de fabrica.
 
-## 6. Consideración avanzada: migración a firmware alternativo (OpenWrt)
+En cuanto a las actualizaciones de firmware, el manual describe cuatro metodos disponibles y dedica atencion especifica a la actualizacion automatica en horario nocturno, incluyendo la recomendacion de hacer una copia de seguridad de la configuracion antes de proceder. Por ultimo, la gestion remota aparece desactivada por defecto y el manual exige una accion explicita del usuario para habilitarla, lo cual es una decision de diseno acertada.
 
-Para usuarios con conocimientos técnicos avanzados, la sustitución del firmware propietario de TP-Link por **OpenWrt** es la medida de mayor impacto en la reducción de la superficie de ataque:
+---
 
-**Ventajas:**
-- Elimina el código propietario potencialmente vulnerable, incluyendo código de debug residual como el explotado en CVE-2025-7851
-- Control total sobre qué servicios están activos
-- Actualizaciones de seguridad más frecuentes e independientes del fabricante
-- Soporte para firewall avanzado (nftables), IDS/IPS embebido, y monitorización detallada
+## Las omisiones mas importantes
 
-**Riesgos y consideraciones:**
-- Anula la garantía del dispositivo
-- Un proceso de flasheo incorrecto puede hacer el router irrecuperable ("brick")
-- Verificar compatibilidad en https://openwrt.org/toh/ antes de proceder
-- Requiere configuración desde cero (no migra configuración del firmware original)
+Aqui es donde el documento muestra sus limitaciones mas significativas.
 
-***
+**WPS** ocupa tres subsecciones completas explicando como conectar dispositivos mediante PIN, boton fisico y PIN del router. En ningun momento se menciona que el sistema de autenticacion por PIN es vulnerable a ataques de fuerza bruta por un fallo de diseno en su verificacion, ni se recomienda desactivarlo tras la configuracion inicial. El resultado es que cualquier usuario que siga el manual tendra WPS permanentemente activo sin saberlo.
 
-## 7. Referencias y fuentes
+**WPA3** aparece en la lista de parametros de seguridad inalambrica, pero el manual se limita a decir que "se recomienda no cambiar los ajustes predeterminados". El problema es que la configuracion de fabrica no garantiza WPA3, y el documento no explica en ningun momento las diferencias entre WPA2, WPA3 y el modo mixto, ni recomienda explicitamente cual usar.
 
-- TP-Link Security Advisory Portal: https://www.tp-link.com/us/press/security-advisory/
-- CVE-2025-15517 / Auth Bypass en Archer NX: https://www.tp-link.com/us/support/faq/5027/
-- CSA Singapore Advisory AL-2026-028: https://www.csa.gov.sg/alerts-and-advisories/alerts/al-2026-028/
-- CVE-2025-62501 (SSH Hostkey): https://nvd.nist.gov/vuln/detail/CVE-2025-62501
-- CVE-2025-14756 (Command Injection MR600): https://www.cryptika.com/tp-link-archer-vulnerability-let-attackers-take-control-over-the-router/
-- CVE-2026-0630 y múltiples (Archer BE230): https://lnkd.in/dWpuB4Nb
-- Forescout — TP-Link Router Vulnerabilities (2025): https://www.forescout.com/blog/new-tp-link-router-vulnerabilities-a-primer-on-rooting-routers/
-- LinuxSecurity — Securing TP-Link with OpenWRT: https://linuxsecurity.com/news/network-security/securing-your-tp-link-router-with-openwrt
-- INCIBE — Múltiples vulnerabilidades TP-Link: https://www.incibe.es/empresas/avisos/multiples-vulnerabilidades-en-productos-de-tp-link-0
-- TP-Link Emulador Web oficial (AX55 y otros modelos): https://www.tp-link.com/us/support/emulator/
-- routersecurity.org — Router Security Checklist: https://routersecurity.org/checklist.php
-- Manual oficial Archer AX55 REV4.0.0: https://www.scribd.com/document/862773416/Archer-AX55-UG-REV4-0-0-Router
+**UPnP** se presenta bajo el titulo "Make Xbox Online Games Run Smoothly", enfocado exclusivamente en la comodidad para videojuegos. No existe ninguna advertencia sobre el hecho de que UPnP permite a cualquier dispositivo de la red local, incluyendo malware, abrir puertos en el firewall sin autenticacion.
+
+**FTP remoto sobre USB** se documenta paso a paso, incluyendo la URL de acceso directo al servicio desde Internet. La unica advertencia es tecnica: si el ISP asigna una IP privada, la funcion no funcionara. No hay ninguna mencion a que FTP transmite credenciales en texto claro, ni a que el servicio queda expuesto directamente a Internet, ni a alternativas mas seguras como SFTP.
+
+**TP-Link Cloud y la app Tether** se describen como una forma conveniente de gestion remota. Lo que no se menciona es que vincular el router a una cuenta TP-Link implica una conexion saliente persistente hacia infraestructura cloud externa, ampliando la superficie de ataque mas alla de la red local. El manual tampoco ofrece informacion sobre como desvincular el dispositivo ni sobre las implicaciones de privacidad asociadas.
+
+**La funcion de recuperacion de contrasena** por correo electronico requiere almacenar credenciales SMTP en el router. El manual no advierte que esas credenciales quedarian expuestas si la configuracion es exportada o el dispositivo comprometido, ni recomienda desactivar la funcion si no se necesita.
+
+---
+
+## Conclusion
+
+El User Guide del Archer AX55 es un documento de configuracion y uso, no una guia de seguridad. Explica correctamente como funciona cada caracteristica del dispositivo, pero trata la seguridad como algo puntual y secundario en lugar de como un eje transversal de la configuracion.
+
+Las omisiones mas graves no son errores tecnicos sino de enfoque: WPS, FTP remoto y UPnP se presentan exclusivamente como funcionalidades utiles, sin el contexto de riesgo necesario para que el usuario tome decisiones informadas. El resultado practico es que un usuario que configure el AX55 siguiendo unicamente el manual oficial terminara con WPS activo, posiblemente con FTP remoto habilitado y con UPnP funcionando, sin haber evaluado en ningun momento si WPA3 esta correctamente configurado. Todas estas son exactamente las condiciones que las medidas de bastionado de esta guia buscan corregir.
