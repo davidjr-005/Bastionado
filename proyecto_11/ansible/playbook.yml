@@ -1,0 +1,100 @@
+---
+- name: Bastionado del servidor objetivo del Proyecto 11
+  hosts: target
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Instalar paquetes base de seguridad y servicios
+      ansible.builtin.apt:
+        name:
+          - curl
+          - dnsmasq
+          - nginx
+          - openssh-server
+          - sudo
+        state: present
+        update_cache: true
+
+    - name: Publicar pagina de comprobacion HTTP
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Proyecto 11 - servidor bastionado
+          Servicio HTTP permitido para pruebas controladas.
+
+    - name: Instalar banner legal SSH
+      ansible.builtin.copy:
+        src: files/issue.net
+        dest: /etc/issue.net
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Deshabilitar login SSH de root
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PermitRootLogin"
+        line: "PermitRootLogin no"
+        validate: "sshd -t -f %s"
+      notify: Reiniciar SSH
+
+    - name: Limitar intentos de autenticacion SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?MaxAuthTries"
+        line: "MaxAuthTries 3"
+        validate: "sshd -t -f %s"
+      notify: Reiniciar SSH
+
+    - name: Deshabilitar X11Forwarding por SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?X11Forwarding"
+        line: "X11Forwarding no"
+        validate: "sshd -t -f %s"
+      notify: Reiniciar SSH
+
+    - name: Configurar banner SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?Banner"
+        line: "Banner /etc/issue.net"
+        validate: "sshd -t -f %s"
+      notify: Reiniciar SSH
+
+    - name: Configurar dnsmasq para la zona de laboratorio
+      ansible.builtin.copy:
+        dest: /etc/dnsmasq.d/proyecto11.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          interface=eth0
+          listen-address=10.12.0.10
+          bind-interfaces
+          address=/empresa.local/10.12.0.10
+          log-queries
+          log-facility=/var/log/dnsmasq.log
+      notify: Reiniciar DNS
+
+    - name: Asegurar permisos estrictos en sshd_config
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: "0600"
+
+  handlers:
+    - name: Reiniciar SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: Reiniciar DNS
+      ansible.builtin.service:
+        name: dnsmasq
+        state: restarted

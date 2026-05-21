@@ -1,0 +1,5 @@
+﻿NAME           IMAGE                               COMMAND                  SERVICE    CREATED          STATUS          PORTS
+p11-attacker   proyecto11-adversary-lab-attacker   "bash -lc 'ip route ÔÇª"   attacker   2 hours ago      Up 2 hours      
+p11-control    proyecto11-adversary-lab-control    "tail -f /dev/null"      control    31 minutes ago   Up 31 minutes   
+p11-firewall   proyecto11-adversary-lab-firewall   "/usr/local/bin/fireÔÇª"   firewall   2 hours ago      Up 2 hours      
+p11-target     proyecto11-adversary-lab-target     "/usr/local/bin/targÔÇª"   target     2 hours ago      Up 2 hours      22/tcp, 80/tcp, 53/udp

@@ -1,0 +1,21 @@
+﻿Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                                               
+udp   UNCONN 0      0          127.0.0.1:53         0.0.0.0:*    ino:36638 sk:2001 cgroup:/ <->                                       
+udp   UNCONN 0      0         10.30.0.20:53         0.0.0.0:*    ino:36636 sk:2002 cgroup:/ <->                                       
+udp   UNCONN 0      0         10.12.0.10:53         0.0.0.0:*    ino:36634 sk:2003 cgroup:/ <->                                       
+udp   UNCONN 0      0         127.0.0.11:47524      0.0.0.0:*    ino:38993 sk:4001 cgroup:unreachable:9d <->                          
+udp   UNCONN 0      0              [::1]:53            [::]:*    ino:36640 sk:2004 cgroup:/ v6only:1 <->                              
+tcp   LISTEN 0      4096      127.0.0.11:38831      0.0.0.0:*    ino:38994 sk:4002 cgroup:unreachable:9d <->                          
+tcp   LISTEN 0      32         127.0.0.1:53         0.0.0.0:*    ino:36639 sk:2005 cgroup:/ <->                                       
+tcp   LISTEN 0      32        10.30.0.20:53         0.0.0.0:*    ino:36637 sk:2006 cgroup:/ <->                                       
+tcp   LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=30,fd=5)) ino:39040 sk:1001 cgroup:/ <->         
+tcp   LISTEN 0      128          0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=727,fd=3)) ino:52279 sk:3001 cgroup:/ <->         
+tcp   LISTEN 0      32        10.12.0.10:53         0.0.0.0:*    ino:36635 sk:2007 cgroup:/ <->                                       
+tcp   LISTEN 0      511             [::]:80            [::]:*    users:(("nginx",pid=30,fd=6)) ino:39041 sk:1002 cgroup:/ v6only:1 <->
+tcp   LISTEN 0      128             [::]:22            [::]:*    users:(("sshd",pid=727,fd=4)) ino:52281 sk:3002 cgroup:/ v6only:1 <->
+tcp   LISTEN 0      32             [::1]:53            [::]:*    ino:36641 sk:2008 cgroup:/ v6only:1 <->                              
+
+--- sshd_config relevante ---
+PermitRootLogin no
+MaxAuthTries 3
+X11Forwarding no
+Banner /etc/issue.net

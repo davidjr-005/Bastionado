@@ -1,0 +1,93 @@
+name: proyecto11-adversary-lab
+
+services:
+  firewall:
+    build:
+      context: ./docker/firewall
+    container_name: p11-firewall
+    hostname: p11-firewall
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      MITIGATION_MODE: baseline
+      TARGET_IP: 10.12.0.10
+      ATTACKER_NET: 10.11.0.0/24
+      DMZ_NET: 10.12.0.0/24
+    volumes:
+      - ./logs/firewall:/var/log/firewall
+    networks:
+      attacker_net:
+        ipv4_address: 10.11.0.2
+      dmz_net:
+        ipv4_address: 10.12.0.2
+
+  target:
+    build:
+      context: ./docker/target
+    container_name: p11-target
+    hostname: target01
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - firewall
+    networks:
+      dmz_net:
+        ipv4_address: 10.12.0.10
+      mgmt_net:
+        ipv4_address: 10.30.0.20
+
+  attacker:
+    build:
+      context: ./docker/attacker
+    container_name: p11-attacker
+    hostname: attacker01
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - firewall
+      - target
+    command: >
+      bash -lc "ip route replace 10.12.0.0/24 via 10.11.0.2 &&
+                tail -f /dev/null"
+    networks:
+      attacker_net:
+        ipv4_address: 10.11.0.10
+
+  control:
+    build:
+      context: ./docker/control
+    container_name: p11-control
+    hostname: control01
+    depends_on:
+      - target
+    working_dir: /workspace
+    volumes:
+      - ./ansible:/workspace/ansible:ro
+      - ./inspec:/workspace/inspec:ro
+      - ./evidencias:/workspace/evidencias
+      - ./logs:/workspace/logs
+    command: tail -f /dev/null
+    networks:
+      mgmt_net:
+        ipv4_address: 10.30.0.10
+
+networks:
+  attacker_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.11.0.0/24
+  dmz_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.12.0.0/24
+  mgmt_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.30.0.0/24

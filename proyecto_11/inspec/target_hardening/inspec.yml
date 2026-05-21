@@ -1,0 +1,7 @@
+name: target_hardening
+title: Proyecto 11 - Comprobacion de bastionado
+maintainer: David_JR
+summary: Verifica el bastionado aplicado con Ansible sobre el servidor objetivo.
+version: 1.0.0
+supports:
+  - os-family: linux

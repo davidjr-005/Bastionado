@@ -1,0 +1,22 @@
+﻿Chain FORWARD (policy DROP 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+1      138 33659 ACCEPT     0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+2        0     0 LOG        0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate INVALID limit: avg 6/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_INVALID "
+3        0     0 DROP       0    --  *      *       0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+4       13   700 LOG        6    --  *      *       10.11.0.0/24         10.12.0.10           multiport dports 23,135,139,445,3389,5900 limit: avg 18/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_RECON "
+5       22  1160 DROP       6    --  *      *       10.11.0.0/24         10.12.0.10           multiport dports 23,135,139,445,3389,5900
+6        7   420 LOG        6    --  *      *       10.11.0.0/24         10.12.0.10           tcp dpt:22 ctstate NEW recent: UPDATE seconds: 60 hit_count: 5 name: P11_SSH side: source mask: 255.255.255.255 limit: avg 12/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_SSH_BRUTE "
+7       12   720 DROP       6    --  *      *       10.11.0.0/24         10.12.0.10           tcp dpt:22 ctstate NEW recent: UPDATE seconds: 60 hit_count: 5 name: P11_SSH side: source mask: 255.255.255.255
+8        5   284 ACCEPT     6    --  *      *       10.11.0.0/24         10.12.0.10           tcp dpt:22 ctstate NEW recent: SET name: P11_SSH side: source mask: 255.255.255.255
+9        5   445 LOG        17   --  *      *       10.11.0.0/24         10.12.0.10           udp dpt:53 limit: above 15/sec burst 30 mode srcip limit: avg 12/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_DNS_FLOOD "
+10      65  5780 DROP       17   --  *      *       10.11.0.0/24         10.12.0.10           udp dpt:53 limit: above 15/sec burst 30 mode srcip
+11       1    84 ACCEPT     1    --  *      *       10.11.0.0/24         10.12.0.10           limit: avg 8/sec burst 12
+12       0     0 LOG        1    --  *      *       10.11.0.0/24         10.12.0.10           limit: avg 12/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_ICMP_FLOOD "
+13       0     0 DROP       1    --  *      *       10.11.0.0/24         10.12.0.10          
+14       0     0 LOG        6    --  *      *       10.12.0.0/24         10.11.0.0/24         tcp dpt:4444 limit: avg 12/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_C2_BEACON "
+15       0     0 DROP       6    --  *      *       10.12.0.0/24         10.11.0.0/24         tcp dpt:4444
+16       1    44 ACCEPT     6    --  *      *       10.11.0.0/24         10.12.0.10           multiport dports 22,80
+17      15  1331 ACCEPT     17   --  *      *       10.11.0.0/24         10.12.0.10           udp dpt:53
+18       0     0 ACCEPT     6    --  *      *       10.12.0.0/24         10.11.0.0/24         tcp dpt:4444
+19       0     0 LOG        0    --  *      *       0.0.0.0/0            0.0.0.0/0            limit: avg 20/min burst 5 LOG flags 0 level 4 prefix "P11_DROP_DEFAULT "
+20       0     0 DROP       0    --  *      *       0.0.0.0/0            0.0.0.0/0           
