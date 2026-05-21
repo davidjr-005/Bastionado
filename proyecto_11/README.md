@@ -133,6 +133,14 @@ La comprobacion valida que el bastionado aplicado por Ansible queda correctament
 
 ## Emulacion de adversarios en modo baseline
 
+En esta version del laboratorio no se ha ejecutado Infection Monkey ni CALDERA. Por falta de tiempo y por limitaciones tecnicas del entorno, se ha optado por una emulacion controlada con un contenedor atacante propio. La documentacion oficial de Infection Monkey indica que su contenedor Docker esta soportado en Linux y no es compatible con Docker for Windows o Docker for Mac:
+
+```text
+https://techdocs.akamai.com/infection-monkey/docs/docker
+```
+
+Como el laboratorio se ha desarrollado sobre Docker Desktop en Windows, ejecutar Infection Monkey de forma fiable habria requerido migrar el entorno a una VM Linux o rehacer la topologia para que el agente atravesase correctamente el cortafuegos. Para mantener una prueba reproducible dentro del tiempo disponible, se han simulado comportamientos equivalentes: reconocimiento de puertos, fuerza bruta SSH, rafagas DNS e intentos de conexion a servicios no publicados.
+
 La emulacion se ejecuta desde el contenedor atacante:
 
 ```powershell
@@ -276,7 +284,7 @@ cd ..
 
 El laboratorio demuestra que una infraestructura desplegada en Docker puede usarse para emular comportamientos adversarios y validar defensas perimetrales. La primera ejecucion permite observar actividad sospechosa, como reconocimiento de puertos, fuerza bruta SSH simulada y rafagas DNS. Despues, el modo estricto del cortafuegos aplica contramedidas y los contadores de `iptables` demuestran que los comportamientos detectados son mitigados.
 
-Con esto se cumplen los objetivos principales del proyecto: desplegar una infraestructura reproducible, aplicar bastionado automatizado, verificarlo con controles y analizar la respuesta del cortafuegos ante actividad no deseada.
+Con esto se cumplen los objetivos principales del proyecto: desplegar una infraestructura reproducible, aplicar bastionado automatizado, verificarlo con controles y analizar la respuesta del cortafuegos ante actividad no deseada. La principal limitacion de la entrega es que la emulacion se ha realizado con herramientas controladas propias en lugar de una ejecucion real de Infection Monkey.
 
 ## Limpieza del laboratorio
 
